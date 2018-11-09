@@ -1,0 +1,29 @@
+
+plugins {
+	id 'groovy'
+}
+
+jar {
+	manifest {
+		attributes 'Main-Class': 'com.insanedev.MyBot'
+	}
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+repositories {
+	jcenter()
+}
+
+dependencies {
+	compile 'org.codehaus.groovy:groovy-all:2.5.3'
+}
+
+task buildZip(type: Zip) {
+    from jar
+}
+
+task wrapper(type: Wrapper) {
+	gradleVersion = '4.9'
+}

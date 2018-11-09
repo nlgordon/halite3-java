@@ -1,0 +1,9 @@
+.gradle
+.idea
+/build/
+/Java/
+/replays/
+/*.log
+/halite3-java.iml
+.DS_Store
+/out/
