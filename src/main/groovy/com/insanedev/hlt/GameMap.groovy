@@ -12,12 +12,23 @@ class GameMap {
         cells = new MapCell[height][]
         for (int y = 0; y < height; ++y) {
             cells[y] = new MapCell[width]
+            for (int x = 0; x < width; x++) {
+                cells[y][x] = new MapCell(new Position(x, y), 0)
+            }
         }
+    }
+
+    MapCell getAt(final Position position) {
+        return at(position)
     }
 
     MapCell at(final Position position) {
         final Position normalized = normalize(position)
         return cells[normalized.y][normalized.x]
+    }
+
+    MapCell getAt(final Entity entity) {
+        return at(entity)
     }
 
     MapCell at(final Entity entity) {

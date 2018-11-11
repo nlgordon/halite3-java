@@ -1,51 +1,66 @@
 package com.insanedev.hlt
 
+import groovy.transform.EqualsAndHashCode
+
+enum CommandType {
+    MOVE("m"), SPAWN("g"), CONSTRUCT("c")
+
+    final String charValue
+
+    CommandType(String charValue) {
+        this.charValue = charValue
+    }
+}
+
+@EqualsAndHashCode
 class Command {
-    EntityId id
-    Direction direction
-    String command = null;
+    CommandType type
 
     static Command spawnShip() {
-        return new Command("g")
+        return new Command(CommandType.SPAWN)
     }
 
     static Command transformShipIntoDropoffSite(final EntityId id) {
-        return new Command("c " + id)
+        return new ConstructDropoffCommand(id)
     }
 
     static Command move(final EntityId id, final Direction direction) {
-        return new Command(id, direction)
+        return new MoveCommand(id, direction)
     }
 
-    private Command(EntityId id, Direction direction) {
+    Command(CommandType type) {
+        this.type = type
+    }
+
+    String getCommand() {
+        return type.charValue
+    }
+}
+
+class MoveCommand extends Command {
+    EntityId id
+    Direction direction
+
+    MoveCommand(final EntityId id, final Direction direction) {
+        super(CommandType.MOVE)
         this.id = id
         this.direction = direction
     }
 
-    private Command(final String command) {
-        this.command = command
+    String getCommand() {
+        return "$type.charValue $id $direction.charValue"
+    }
+}
+
+class ConstructDropoffCommand extends Command {
+    EntityId id
+
+    ConstructDropoffCommand(final EntityId id) {
+        super(CommandType.CONSTRUCT)
+        this.id = id
     }
 
     String getCommand() {
-        if (command) {
-            return command
-        } else {
-            return "m $id $direction.charValue"
-        }
-    }
-
-    @Override
-    boolean equals(Object o) {
-        if (this == o) return true
-        if (o == null || getClass() != o.getClass()) return false
-
-        Command command1 = (Command) o
-
-        return command.equals(command1.command)
-    }
-
-    @Override
-    int hashCode() {
-        return command.hashCode()
+        return "$type.charValue $id"
     }
 }

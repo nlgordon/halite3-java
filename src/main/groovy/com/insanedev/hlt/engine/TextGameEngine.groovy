@@ -78,8 +78,7 @@ class TextGameEngine implements GameEngine {
             final Input rowInput = Input.readInput()
 
             for (int x = 0; x < width; ++x) {
-                final int halite = rowInput.getInt()
-                map.cells[y][x] = new MapCell(new Position(x, y), halite)
+                map.cells[y][x].halite = rowInput.getInt()
             }
         }
 

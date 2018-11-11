@@ -26,9 +26,9 @@ class ShipUpdate extends GameUpdate {
             ship.position = position
             ship.halite = halite
         } else {
-            ship = player.ships[id] = new Ship(player, id, position, halite)
+            ship = player.ships[id] = new Ship(game, player, id, position, halite)
         }
-        game.gameMap.at(ship).markUnsafe(ship)
+        game.gameMap.at(ship).ship = ship
 
         Log.debug("Updating player ${player.id} ship ${ship.id} at ${ship.position.x} ${ship.position.y} with halite ${ship.halite}")
 

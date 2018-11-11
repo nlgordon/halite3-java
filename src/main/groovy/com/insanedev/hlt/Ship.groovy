@@ -6,15 +6,12 @@ import groovy.transform.EqualsAndHashCode
 class Ship extends Entity {
     int halite
     boolean destroyed
+    final Game game
 
-    Ship(final PlayerId owner, final EntityId id, final Position position, final int halite) {
-        super(owner, id, position)
-        this.halite = halite
-    }
-
-    Ship(final Player player, final EntityId id, final Position position, final int halite) {
+    Ship(Game game, final Player player, final EntityId id, final Position position, final int halite) {
         super(player, id, position)
         this.halite = halite
+        this.game = game
     }
 
     boolean isFull() {
@@ -38,7 +35,7 @@ class Ship extends Entity {
 
     void destroy() {
         destroyed = true
-        // Need to remove from map cell as well
+        game.gameMap[this].ship = null
     }
 
     boolean isActive() {
