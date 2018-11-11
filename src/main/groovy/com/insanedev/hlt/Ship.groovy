@@ -41,6 +41,10 @@ class Ship extends Entity {
         // Need to remove from map cell as well
     }
 
+    boolean isActive() {
+        return !destroyed
+    }
+
     void assertActive() {
         assert !destroyed
     }

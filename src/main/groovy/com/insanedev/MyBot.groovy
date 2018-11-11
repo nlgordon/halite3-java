@@ -1,6 +1,8 @@
 package com.insanedev
 
 import com.insanedev.hlt.*
+import com.insanedev.hlt.engine.GameEngine
+import com.insanedev.hlt.engine.TextGameEngine
 
 class MyBot {
     static void main(final String[] args) {
@@ -20,7 +22,7 @@ class MyBot {
         gameEngine.ready("MyJavaBot")
 
         Log.log("Successfully created bot! My Player ID is " + game.myId)
-//        Log.enableDebugging()
+        Log.enableDebugging()
 
         for (; ;) {
             gameEngine.updateFrame()
@@ -42,9 +44,7 @@ class MyBot {
              * Calculate Ship Moves
              */
 
-            Log.log("Deciding actions for ships: ${me.ships.keySet()}")
-
-            for (final Ship ship : me.ships.values()) {
+            me.ships.values().findAll({it.active}).each({Ship ship ->
                 if (gameMap.at(ship).halite < Constants.MAX_HALITE / 10 || ship.isFull()) {
                     final Direction randomDirection = Direction.ALL_CARDINALS.get(rng.nextInt(4))
                     Log.log("Moving ${ship.id} $randomDirection")
@@ -53,7 +53,7 @@ class MyBot {
                     Log.log("Not moving ${ship.id}")
                     commandQueue.add(ship.stayStill())
                 }
-            }
+            })
 
             if (game.turnNumber <= Constants.MAX_TURNS / 2 && me.halite >= Constants.SHIP_COST && !gameMap.at(me.shipyard).isOccupied()) {
                 Log.log("Spawning Ship")
