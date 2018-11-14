@@ -3,7 +3,7 @@ package com.insanedev
 import com.insanedev.hlt.*
 import spock.lang.Specification
 
-class TestSpec extends Specification {
+class TestShip extends Specification {
 
     Ship ship
     Game game
@@ -60,5 +60,13 @@ class TestSpec extends Specification {
 
         then:
         thrown(Error)
+    }
+
+    def "When a ship is ordered to move, it returns an MoveCommand with direction specified"() {
+        expect:
+        ship.move(direction).direction == direction
+
+        where:
+        direction << [Direction.STILL] + Direction.ALL_CARDINALS
     }
 }

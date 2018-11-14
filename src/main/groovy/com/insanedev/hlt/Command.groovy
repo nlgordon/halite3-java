@@ -20,11 +20,11 @@ class Command {
         return new Command(CommandType.SPAWN)
     }
 
-    static Command transformShipIntoDropoffSite(final EntityId id) {
+    static ConstructDropoffCommand transformShipIntoDropoffSite(final EntityId id) {
         return new ConstructDropoffCommand(id)
     }
 
-    static Command move(final EntityId id, final Direction direction) {
+    static MoveCommand move(final EntityId id, final Direction direction) {
         return new MoveCommand(id, direction)
     }
 

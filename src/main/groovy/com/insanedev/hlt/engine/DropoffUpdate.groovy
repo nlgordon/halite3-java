@@ -18,7 +18,7 @@ class DropoffUpdate extends GameUpdate {
 
     void buildDropoff(Player player) {
         if (!player.dropoffs.containsKey(id)) {
-            Dropoff dropoff = new Dropoff(player.id, id, position)
+            Dropoff dropoff = new Dropoff(player, id, position)
             player.dropoffs[id] = dropoff
             game.gameMap.at(dropoff).structure = dropoff
         }

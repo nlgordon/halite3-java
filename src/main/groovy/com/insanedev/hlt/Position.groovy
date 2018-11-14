@@ -1,7 +1,8 @@
 package com.insanedev.hlt
 
-import java.util.ArrayList
+import groovy.transform.EqualsAndHashCode
 
+@EqualsAndHashCode
 class Position {
     final int x
     final int y
@@ -14,10 +15,10 @@ class Position {
     ArrayList<Position> getSurroundingCardinals() {
         final ArrayList<Position> suroundingCardinals = new ArrayList<>()
 
-        for(final Direction d : Direction.ALL_CARDINALS) {
+        for (final Direction d : Direction.ALL_CARDINALS) {
             suroundingCardinals.add(directionalOffset(d))
         }
-        
+
         return suroundingCardinals
     }
 
@@ -51,23 +52,5 @@ class Position {
         }
 
         return new Position(x + dx, y + dy)
-    }
-
-    @Override
-    boolean equals(Object o) {
-        if (this == o) return true
-        if (o == null || getClass() != o.getClass()) return false
-
-        Position position = (Position) o
-
-        if (x != position.x) return false
-        return y == position.y
-    }
-
-    @Override
-    int hashCode() {
-        int result = x
-        result = 31 * result + y
-        return result
     }
 }

@@ -3,8 +3,6 @@ package com.insanedev.hlt.engine
 import com.insanedev.hlt.Command
 import com.insanedev.hlt.Game
 
-import java.util.Collection
-
 interface GameEngine {
     Game init()
 

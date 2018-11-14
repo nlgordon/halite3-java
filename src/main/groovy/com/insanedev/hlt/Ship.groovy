@@ -18,17 +18,17 @@ class Ship extends Entity {
         return halite >= Constants.MAX_HALITE
     }
 
-    Command makeDropoff() {
+    ConstructDropoffCommand makeDropoff() {
         assertActive()
         return Command.transformShipIntoDropoffSite(id)
     }
 
-    Command move(final Direction direction) {
+    MoveCommand move(final Direction direction) {
         assertActive()
         return Command.move(id, direction)
     }
 
-    Command stayStill() {
+    MoveCommand stayStill() {
         assertActive()
         return Command.move(id, Direction.STILL)
     }

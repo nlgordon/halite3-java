@@ -1,11 +1,11 @@
-package com.insanedev.hlt;
+package com.insanedev.hlt
 
-public class Shipyard extends Entity {
-    public Shipyard(final PlayerId owner, final Position position) {
-        super(owner, EntityId.NONE, position);
+class Shipyard extends Entity {
+    Shipyard(final Player owner, final Position position) {
+        super(owner, EntityId.NONE, position)
     }
 
-    public Command spawn() {
-        return Command.spawnShip();
+    Command spawn() {
+        return Command.spawnShip()
     }
 }

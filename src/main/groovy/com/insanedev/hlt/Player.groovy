@@ -1,21 +1,29 @@
 package com.insanedev.hlt
 
 import com.insanedev.hlt.engine.PlayerUpdate
+import groovy.transform.EqualsAndHashCode
 
+@EqualsAndHashCode(includes = "id")
 class Player {
     final PlayerId id
-    final Shipyard shipyard
-    int halite
+    Shipyard shipyard
+    private int halite
     final Map<EntityId, Ship> ships = [:]
     final Map<EntityId, Dropoff> dropoffs = [:]
 
-    private Player(final PlayerId id, final Shipyard shipyard) {
+    private Player(final PlayerId id) {
         this.id = id
-        this.shipyard = shipyard
+    }
+
+    int getHalite() {
+        return halite
     }
 
     static Player create(int playerId, int shipyard_x, int shipyard_y) {
-        new Player(new PlayerId(playerId), new Shipyard(new PlayerId(playerId), new Position(shipyard_x, shipyard_y)))
+        Player player = new Player(new PlayerId(playerId))
+        def shipyard = new Shipyard(player, new Position(shipyard_x, shipyard_y))
+        player.shipyard = shipyard
+        return player
     }
 
     void applyUpdate(PlayerUpdate update) {
@@ -37,8 +45,8 @@ class Player {
 
     void markShipsDestroyed(List<EntityId> updatedShips) {
         Set<EntityId> destroyedShips = ships.values()
-                .findAll {it.active}
-                .collect({it.id})
+                .findAll { it.active }
+                .collect({ it.id })
         destroyedShips.removeAll(updatedShips)
 
         if (destroyedShips) {
