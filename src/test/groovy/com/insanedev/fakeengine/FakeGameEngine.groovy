@@ -15,6 +15,7 @@ class FakeGameEngine implements GameEngine {
     private Game game
     private Collection<Command> turnCommands = []
     private maxShipId = 0
+    private maxDropoffId = 0
     private turn = 0
 
     FakeGameEngine(Player me) {
@@ -107,7 +108,7 @@ class FakeGameEngine implements GameEngine {
             def currentCellHalite = game.gameMap.at(ship).halite
 
             if (dropoffCommands.containsKey(ship.id)) {
-                return new Tuple2(new DropoffUpdate(game, new EntityId(0), ship.position, ship.halite), null)
+                return new Tuple2(new DropoffUpdate(game, new EntityId(maxDropoffId++), ship.position, ship.halite), null)
             } else if (moveCommands.containsKey(ship.id)) {
                 MoveCommand moveCommand = moveCommands[ship.id]
 

@@ -1,6 +1,6 @@
 package com.insanedev.fakeengine
 
-
+import com.insanedev.hlt.EntityId
 import com.insanedev.hlt.Position
 
 class TestFakeGameEngineConstructionCommands extends BaseTestFakeGameEngine {
@@ -157,5 +157,28 @@ class TestFakeGameEngineConstructionCommands extends BaseTestFakeGameEngine {
         engine.updateFrame()
         then:
         player.halite == 1000
+    }
+
+    def "The first dropoff has id 0"() {
+        setup:
+        player.halite = 4000
+        def ship = engine.createShip(1, 1, 0)
+        when:
+        engine.endTurn([ship.makeDropoff()])
+        engine.updateFrame()
+        then:
+        player.dropoffs[new EntityId(0)] != null
+    }
+
+    def "The second dropoff has id 1"() {
+        setup:
+        player.halite = 8000
+        def ship = engine.createShip(1, 1, 0)
+        def ship2 = engine.createShip(1, 0, 0)
+        when:
+        engine.endTurn([ship.makeDropoff(), ship2.makeDropoff()])
+        engine.updateFrame()
+        then:
+        player.dropoffs[new EntityId(1)] != null
     }
 }
