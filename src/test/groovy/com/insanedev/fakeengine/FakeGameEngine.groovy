@@ -1,6 +1,7 @@
 package com.insanedev.fakeengine
 
 import com.insanedev.hlt.*
+import com.insanedev.hlt.engine.DropoffUpdate
 import com.insanedev.hlt.engine.GameEngine
 import com.insanedev.hlt.engine.GameUpdate
 import com.insanedev.hlt.engine.MapCellUpdate
@@ -60,18 +61,25 @@ class FakeGameEngine implements GameEngine {
         if (turn == 1) {
             updatedHalite = 5000
         }
-        if (turnCommands.any { it.type == CommandType.SPAWN } && me.halite >= Constants.SHIP_COST) {
-            shipUpdates << getNewlySpawnedShipUpdate()
-            maxShipId++
-            updatedHalite -= Constants.SHIP_COST
-        }
+
+        shipUpdates += turnCommands.findAll{it.type == CommandType.SPAWN}.take(1).collect {
+            if (me.halite >= Constants.SHIP_COST) {
+                updatedHalite -= Constants.SHIP_COST
+                return getNewlySpawnedShipUpdate()
+            }
+            return null
+        }.findAll{it != null}
 
         Map<EntityId, MoveCommand> moveCommands = getMoveCommandMapByShipId()
+        Map<EntityId, ConstructDropoffCommand> dropOffCommands = turnCommands
+                .findAll {it.type == CommandType.CONSTRUCT}
+                .collect{(ConstructDropoffCommand)it}.collectEntries{[it.id, it]}
 
-        updates += getUpdatesFromPlayerShips(moveCommands)
+        updates += getUpdatesFromPlayerShips(moveCommands, dropOffCommands)
 
         shipUpdates += getShipUpdatesFromGenericList(updates)
         mapCellUpdates += getMapCellUpdatesFromGenericList(updates)
+        List<DropoffUpdate> dropOffUpdates = updates.findAll { it instanceof DropoffUpdate }.collect { (DropoffUpdate) it }
 
         shipUpdates.each { ShipUpdate shipUpdate ->
             if (shipUpdate.position == me.shipyard.position) {
@@ -84,19 +92,21 @@ class FakeGameEngine implements GameEngine {
 
         shipUpdates = shipUpdates.findAll {!destroyedShips.containsKey(it.id)}
 
-        PlayerUpdate playerUpdate = new PlayerUpdate(game, new PlayerId(0), updatedHalite, shipUpdates, [])
+        PlayerUpdate playerUpdate = new PlayerUpdate(game, new PlayerId(0), updatedHalite, shipUpdates, dropOffUpdates)
         me.applyUpdate(playerUpdate)
         mapCellUpdates.each {it.apply()}
         this.turnCommands.clear()
     }
 
-    List<GameUpdate> getUpdatesFromPlayerShips(Map<EntityId, MoveCommand> moveCommands) {
+    List<GameUpdate> getUpdatesFromPlayerShips(Map<EntityId, MoveCommand> moveCommands, Map<EntityId, ConstructDropoffCommand> dropoffCommands) {
         return me.ships.values()
                 .findAll { it.active }
                 .collect { Ship ship ->
             def currentCellHalite = game.gameMap.at(ship).halite
 
-            if (moveCommands.containsKey(ship.id)) {
+            if (dropoffCommands.containsKey(ship.id)) {
+                return new Tuple2(new DropoffUpdate(game, new EntityId(0), ship.position), null)
+            } else if (moveCommands.containsKey(ship.id)) {
                 MoveCommand moveCommand = moveCommands[ship.id]
 
                 return getUpdatesForMove(ship, currentCellHalite, moveCommand)
@@ -105,6 +115,7 @@ class FakeGameEngine implements GameEngine {
             }
         }.collectMany { [it.first, it.second] }
                 .findAll { it != null }
+                .collect{(GameUpdate)it}
     }
 
     List<MapCellUpdate> getMapCellUpdatesFromGenericList(List<GameUpdate> updates) {
@@ -149,7 +160,7 @@ class FakeGameEngine implements GameEngine {
     }
 
     ShipUpdate getNewlySpawnedShipUpdate() {
-        return new ShipUpdate(game, new EntityId(maxShipId), me.shipyard.position, 0)
+        return new ShipUpdate(game, new EntityId(maxShipId++), me.shipyard.position, 0)
     }
 
     Map<EntityId, MoveCommand> getMoveCommandMapByShipId() {

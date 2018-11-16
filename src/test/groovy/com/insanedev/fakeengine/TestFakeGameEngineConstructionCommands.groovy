@@ -115,4 +115,17 @@ class TestFakeGameEngineConstructionCommands extends BaseTestFakeGameEngine {
         then:
         player.ships.size() == 0
     }
+
+    def "Ordering a ship to convert to a dropoff at 1,1 will create a dropoff at next frame update"() {
+        setup:
+        def ship = engine.createShip(1, 1, 4000)
+        when:
+        engine.endTurn([ship.makeDropoff()])
+        engine.updateFrame()
+        then:
+        player.dropoffs.size() == 1
+    }
+
+    // Deduct from player halite
+    // Ensure ship is destroyed
 }
