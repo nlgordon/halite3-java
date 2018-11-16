@@ -68,49 +68,19 @@ class FakeGameEngine implements GameEngine {
 
         Map<EntityId, MoveCommand> moveCommands = getMoveCommandMapByShipId()
 
-        updates += me.ships
-                .findAll {it.value.active}
-                .collectMany {
-            ShipUpdate shipUpdate
-            MapCellUpdate cellUpdate = null
-            Ship ship = it.value
-            def currentCellHalite = game.gameMap.at(ship).halite
+        updates += getUpdatesFromPlayerShips(moveCommands)
 
-            if (moveCommands.containsKey(it.key)) {
-                MoveCommand moveCommand = moveCommands[it.key]
+        shipUpdates += getShipUpdatesFromGenericList(updates)
+        mapCellUpdates += getMapCellUpdatesFromGenericList(updates)
 
-                def updatedShipHalite = ship.halite - (int) Math.ceil(currentCellHalite * 0.1)
-                if (updatedShipHalite < 0 || moveCommand.direction == Direction.STILL) {
-                    def harvest = (int) Math.ceil(currentCellHalite * 0.25)
-                    harvest = (ship.halite + harvest) > 1000 ? 1000 - ship.halite : harvest
-                    shipUpdate = new ShipUpdate(game, ship.id, ship.position, ship.halite + harvest)
-                    cellUpdate = new MapCellUpdate(game, ship.position, currentCellHalite - harvest)
-                } else {
-                    shipUpdate = new ShipUpdate(game, moveCommand.id, normalizePosition(ship, moveCommand), updatedShipHalite)
-                }
-            } else {
-                def harvest = (int) Math.ceil(game.gameMap.at(ship).halite * 0.25)
-                harvest = (ship.halite + harvest) > 1000 ? 1000 - ship.halite : harvest
-                shipUpdate = new ShipUpdate(game, ship.id, ship.position, ship.halite + harvest)
-                cellUpdate = new MapCellUpdate(game, ship.position, currentCellHalite - harvest)
-            }
-
+        shipUpdates.each { ShipUpdate shipUpdate ->
             if (shipUpdate.position == me.shipyard.position) {
                 updatedHalite += shipUpdate.halite
                 shipUpdate.halite = 0
             }
+        }
 
-            return [shipUpdate, cellUpdate]
-        }.findAll({ it != null })
-
-        shipUpdates += updates.findAll {it instanceof ShipUpdate}.collect {(ShipUpdate)it}
-        mapCellUpdates += updates.findAll {it instanceof MapCellUpdate}.collect {(MapCellUpdate)it}
-
-        Map<Position, List<ShipUpdate>> currentPositions = shipUpdates.groupBy {it.position}
-
-        Map<EntityId, Ship> destroyedShips = currentPositions
-                .findAll {it.value.size() > 1}
-                .collectMany {it.value}.collectEntries {[it.id, it]}
+        Map<EntityId, Ship> destroyedShips = getDestroyedShips(shipUpdates)
 
         shipUpdates = shipUpdates.findAll {!destroyedShips.containsKey(it.id)}
 
@@ -118,6 +88,60 @@ class FakeGameEngine implements GameEngine {
         me.applyUpdate(playerUpdate)
         mapCellUpdates.each {it.apply()}
         this.turnCommands.clear()
+    }
+
+    List<GameUpdate> getUpdatesFromPlayerShips(Map<EntityId, MoveCommand> moveCommands) {
+        return me.ships.values()
+                .findAll { it.active }
+                .collect { Ship ship ->
+            def currentCellHalite = game.gameMap.at(ship).halite
+
+            if (moveCommands.containsKey(ship.id)) {
+                MoveCommand moveCommand = moveCommands[ship.id]
+
+                return getUpdatesForMove(ship, currentCellHalite, moveCommand)
+            } else {
+                return getStillShipUpdates(ship, currentCellHalite)
+            }
+        }.collectMany { [it.first, it.second] }
+                .findAll { it != null }
+    }
+
+    List<MapCellUpdate> getMapCellUpdatesFromGenericList(List<GameUpdate> updates) {
+        return updates.findAll { it instanceof MapCellUpdate }.collect { (MapCellUpdate) it }
+    }
+
+    List<ShipUpdate> getShipUpdatesFromGenericList(List<GameUpdate> updates) {
+        return updates.findAll { it instanceof ShipUpdate }.collect { (ShipUpdate) it }
+    }
+
+    Map<EntityId, Ship> getDestroyedShips(List<ShipUpdate> shipUpdates) {
+        Map<Position, List<ShipUpdate>> currentPositions = shipUpdates.groupBy { it.position }
+
+        Map<EntityId, Ship> destroyedShips = currentPositions
+                .findAll { it.value.size() > 1 }
+                .collectMany { it.value }.collectEntries { [it.id, it] }
+        return destroyedShips
+    }
+
+    Tuple2<ShipUpdate, MapCellUpdate> getUpdatesForMove(Ship ship, int currentCellHalite, MoveCommand moveCommand) {
+        def updatedShipHalite = ship.halite - (int) Math.ceil(currentCellHalite * 0.1)
+        if (updatedShipHalite < 0 || moveCommand.direction == Direction.STILL) {
+            return getStillShipUpdates(ship, currentCellHalite)
+        } else {
+            def shipUpdate = new ShipUpdate(game, moveCommand.id, normalizePosition(ship, moveCommand), updatedShipHalite)
+            return new Tuple2<ShipUpdate, MapCellUpdate>(shipUpdate, null)
+        }
+    }
+
+    Tuple2<ShipUpdate, MapCellUpdate> getStillShipUpdates(Ship ship, int currentCellHalite) {
+        ShipUpdate shipUpdate
+        MapCellUpdate cellUpdate
+        def harvest = (int) Math.ceil(game.gameMap.at(ship).halite * 0.25)
+        harvest = (ship.halite + harvest) > 1000 ? 1000 - ship.halite : harvest
+        shipUpdate = new ShipUpdate(game, ship.id, ship.position, ship.halite + harvest)
+        cellUpdate = new MapCellUpdate(game, ship.position, currentCellHalite - harvest)
+        return new Tuple2<ShipUpdate, MapCellUpdate>(shipUpdate, cellUpdate)
     }
 
     Position normalizePosition(Ship ship, MoveCommand moveCommand) {
