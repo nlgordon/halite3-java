@@ -32,7 +32,7 @@ class FakeGameEngine implements GameEngine {
         Log.safeOpen(0)
         Map<String, String> constants = [
                 "NEW_ENTITY_ENERGY_COST"   : "1000",
-                "DROPOFF_COST"             : "0",
+                "DROPOFF_COST"             : "4000",
                 "MAX_ENERGY"               : "1000",
                 "MAX_TURNS"                : "0",
                 "EXTRACT_RATIO"            : "0",
@@ -79,7 +79,9 @@ class FakeGameEngine implements GameEngine {
 
         shipUpdates += getShipUpdatesFromGenericList(updates)
         mapCellUpdates += getMapCellUpdatesFromGenericList(updates)
-        List<DropoffUpdate> dropOffUpdates = updates.findAll { it instanceof DropoffUpdate }.collect { (DropoffUpdate) it }
+        List<DropoffUpdate> dropOffUpdates = getDropoffUpdatesFromGenericList(updates)
+
+        dropOffUpdates.stream().forEach({updatedHalite -= it.cost})
 
         shipUpdates.each { ShipUpdate shipUpdate ->
             if (shipUpdate.position == me.shipyard.position) {
@@ -105,7 +107,7 @@ class FakeGameEngine implements GameEngine {
             def currentCellHalite = game.gameMap.at(ship).halite
 
             if (dropoffCommands.containsKey(ship.id)) {
-                return new Tuple2(new DropoffUpdate(game, new EntityId(0), ship.position), null)
+                return new Tuple2(new DropoffUpdate(game, new EntityId(0), ship.position, ship.halite), null)
             } else if (moveCommands.containsKey(ship.id)) {
                 MoveCommand moveCommand = moveCommands[ship.id]
 
@@ -116,6 +118,10 @@ class FakeGameEngine implements GameEngine {
         }.collectMany { [it.first, it.second] }
                 .findAll { it != null }
                 .collect{(GameUpdate)it}
+    }
+
+    List<DropoffUpdate> getDropoffUpdatesFromGenericList(List<GameUpdate> updates) {
+        return updates.findAll { it instanceof DropoffUpdate }.collect { (DropoffUpdate) it }
     }
 
     List<MapCellUpdate> getMapCellUpdatesFromGenericList(List<GameUpdate> updates) {

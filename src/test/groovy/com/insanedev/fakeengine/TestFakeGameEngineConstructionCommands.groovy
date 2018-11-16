@@ -126,6 +126,36 @@ class TestFakeGameEngineConstructionCommands extends BaseTestFakeGameEngine {
         player.dropoffs.size() == 1
     }
 
-    // Deduct from player halite
-    // Ensure ship is destroyed
+    def "Ordering a ship to convert to a dropoff at 1,1 will deduct 4000 halite from the player at next frame update"() {
+        setup:
+        player.halite = 4000
+        def ship = engine.createShip(1, 1, 0)
+        when:
+        engine.endTurn([ship.makeDropoff()])
+        engine.updateFrame()
+        then:
+        player.halite == 0
+    }
+
+    def "Ordering a ship to convert to a dropoff at 1,1 will destroy the ship at next frame update"() {
+        setup:
+        player.halite = 4000
+        def ship = engine.createShip(1, 1, 0)
+        when:
+        engine.endTurn([ship.makeDropoff()])
+        engine.updateFrame()
+        then:
+        ship.destroyed
+    }
+
+    def "Ordering a ship to convert to a dropoff with 1000 halite will only pull 3000 from the player's reserve"() {
+        setup:
+        player.halite = 4000
+        def ship = engine.createShip(1, 1, 1000)
+        when:
+        engine.endTurn([ship.makeDropoff()])
+        engine.updateFrame()
+        then:
+        player.halite == 1000
+    }
 }

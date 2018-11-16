@@ -26,4 +26,12 @@ class TestFakeGameEngineConstants extends Specification {
         then:
         Constants.SHIP_COST == 1000
     }
+
+    def "Engine initalizes DROPOFF_COST"() {
+        when:
+        engine.init()
+
+        then:
+        Constants.DROPOFF_COST == 4000
+    }
 }
