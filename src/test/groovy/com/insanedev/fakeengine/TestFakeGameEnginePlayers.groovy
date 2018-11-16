@@ -1,15 +1,8 @@
 package com.insanedev.fakeengine
 
 import com.insanedev.hlt.Game
-import com.insanedev.hlt.Player
-import spock.lang.Specification
 
-class TestFakeGameEnginePlayers extends Specification {
-    private FakeGameEngine engine
-
-    def setup() {
-        engine = new FakeGameEngine(Player.create(0, 0, 0))
-    }
+class TestFakeGameEnginePlayers extends BaseTestFakeGameEngine {
 
     def "On first call to updateFrame, the player is set to 5000 halite"() {
         setup:

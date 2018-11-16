@@ -7,7 +7,7 @@ import groovy.transform.EqualsAndHashCode
 class Player {
     final PlayerId id
     Shipyard shipyard
-    private int halite
+    int halite
     final Map<EntityId, Ship> ships = [:]
     final Map<EntityId, Dropoff> dropoffs = [:]
 
@@ -15,8 +15,8 @@ class Player {
         this.id = id
     }
 
-    int getHalite() {
-        return halite
+    Ship getShip(int id) {
+        return ships[new EntityId(id)]
     }
 
     static Player create(int playerId, int shipyard_x, int shipyard_y) {

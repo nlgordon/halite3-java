@@ -1,31 +1,20 @@
 package com.insanedev.fakeengine
 
-
 import com.insanedev.hlt.Game
-import com.insanedev.hlt.Player
-import spock.lang.Specification
 
-class TestFakeGameEngineInit extends Specification {
-    private Player player
-    private FakeGameEngine engine
-
-    def setup() {
-        player = Player.create(0, 0, 0)
-        engine = new FakeGameEngine(this.player)
-    }
-
+class TestFakeGameEngineInit extends BaseTestFakeGameEngine {
     def "Engine Can initialize a game with one player"() {
         expect:
         engine.init().me == player
     }
 
-    def "Engine creates a map with 1x1 size"() {
+    def "Engine creates a map with 2x2 size"() {
         when:
         Game game = engine.init()
 
         then:
-        game.gameMap.height == 1
-        game.gameMap.width == 1
+        game.gameMap.height == 2
+        game.gameMap.width == 2
     }
 
     def "Engine can create a map with 4x1 size"() {

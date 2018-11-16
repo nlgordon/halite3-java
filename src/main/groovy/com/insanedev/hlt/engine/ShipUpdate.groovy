@@ -6,11 +6,13 @@ import com.insanedev.hlt.Log
 import com.insanedev.hlt.Player
 import com.insanedev.hlt.Position
 import com.insanedev.hlt.Ship
+import groovy.transform.EqualsAndHashCode
 
+@EqualsAndHashCode(includes="id")
 class ShipUpdate extends GameUpdate {
     final EntityId id
-    final Position position
-    final int halite
+    Position position
+    int halite
 
     ShipUpdate(Game game, final EntityId id, final Position position, final int halite) {
         super(game)

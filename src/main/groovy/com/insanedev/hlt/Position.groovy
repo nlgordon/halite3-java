@@ -27,23 +27,23 @@ class Position {
         int dy
 
         switch (d) {
-            case NORTH:
+            case Direction.NORTH:
                 dx = 0
                 dy = -1
                 break
-            case SOUTH:
+            case Direction.SOUTH:
                 dx = 0
                 dy = 1
                 break
-            case EAST:
+            case Direction.EAST:
                 dx = 1
                 dy = 0
                 break
-            case WEST:
+            case Direction.WEST:
                 dx = -1
                 dy = 0
                 break
-            case STILL:
+            case Direction.STILL:
                 dx = 0
                 dy = 0
                 break

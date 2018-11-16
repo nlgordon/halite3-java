@@ -31,6 +31,14 @@ class Log {
         file = f
     }
 
+    static void safeOpen(final int botId) {
+        if (INSTANCE != null) {
+            return
+        }
+
+        open(botId)
+    }
+
     static void open(final int botId) {
         if (INSTANCE != null) {
             log("Error: log: tried to open(" + botId + ") but we have already opened before.")
