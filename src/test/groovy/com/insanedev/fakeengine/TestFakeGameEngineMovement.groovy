@@ -96,7 +96,7 @@ class TestFakeGameEngineMovement extends BaseTestFakeGameEngine {
 
     def "A ship moving retains its halite"() {
         setup:
-        engine.insertShip(1, 0, 100)
+        engine.createShip(1, 0, 100)
         when:
         moveShip(1, Direction.WEST)
         then:

@@ -22,7 +22,7 @@ class TestFakeGameEngineConstructionCommands extends BaseTestFakeGameEngine {
 
     def "Spawning the second ship creates it with entity id 1"() {
         setup:
-        engine.insertShip(1, 0, 0)
+        engine.createShip(1, 0, 0)
 
         when:
         spawnShip()
@@ -64,20 +64,20 @@ class TestFakeGameEngineConstructionCommands extends BaseTestFakeGameEngine {
         getShip(0).halite == 0
     }
 
-    def "The fake engine can insert an arbitrary ship"() {
+    def "The fake engine can create an arbitrary ship"() {
         expect:
-        engine.insertShip() == 0
+        engine.createShip(0, 0, 0).id.id == 0
     }
 
     def "Inserting two ships results in ship ids of 0, 1"() {
         expect:
-        engine.insertShip() == 0
-        engine.insertShip() == 1
+        engine.createShip(0, 0, 0).id.id == 0
+        engine.createShip(0, 0, 0).id.id == 1
     }
 
     def "Inserting a ship creates the ship entity in the me player"() {
         when:
-        engine.insertShip()
+        engine.createShip(0, 0, 0)
 
         then:
         getShip(0) != null
@@ -85,7 +85,7 @@ class TestFakeGameEngineConstructionCommands extends BaseTestFakeGameEngine {
 
     def "Inserting a ship creates the ship at 0,0"() {
         when:
-        engine.insertShip()
+        engine.createShip(0, 0, 0)
 
         then:
         getShip(0).position == new Position(0, 0)
@@ -93,7 +93,7 @@ class TestFakeGameEngineConstructionCommands extends BaseTestFakeGameEngine {
 
     def "Inserting a ship at 1,1 creates the ship at 1,1"() {
         when:
-        engine.insertShip(1, 1)
+        engine.createShip(1, 1, 0)
 
         then:
         getShip(0).position == new Position(1, 1)
@@ -101,7 +101,7 @@ class TestFakeGameEngineConstructionCommands extends BaseTestFakeGameEngine {
 
     def "Inserting a ship at 1,1 with 100 halite results in a ship with 100 halite"() {
         when:
-        engine.insertShip(1, 1, 100)
+        engine.createShip(1, 1, 100)
 
         then:
         getShip(0).halite == 100
