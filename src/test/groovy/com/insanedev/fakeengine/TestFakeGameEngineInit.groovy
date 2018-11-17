@@ -8,13 +8,13 @@ class TestFakeGameEngineInit extends BaseTestFakeGameEngine {
         engine.init().me == player
     }
 
-    def "Engine creates a map with 2x2 size"() {
+    def "Engine creates a map with 3x3 size"() {
         when:
         Game game = engine.init()
 
         then:
-        game.gameMap.height == 2
-        game.gameMap.width == 2
+        game.gameMap.height == 3
+        game.gameMap.width == 3
     }
 
     def "Engine can create a map with 4x1 size"() {

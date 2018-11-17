@@ -1,22 +1,17 @@
 package com.insanedev
 
+import com.insanedev.fakeengine.BaseTestFakeGameEngine
 import com.insanedev.hlt.*
-import spock.lang.Specification
+import spock.lang.Unroll
 
-class TestShip extends Specification {
+class TestShip extends BaseTestFakeGameEngine {
 
     Ship ship
-    Game game
-    Player me
     GameMap gameMap
 
     def setup() {
-        me = Player.create(0, 0, 0)
-        gameMap = new GameMap(1, 1)
-        game = new Game(me, [me], gameMap)
-        ship = new Ship(game, me, new EntityId(0), new Position(0, 0), 0)
-        gameMap[ship].ship = ship
-        me.ships[ship.id] = ship
+        ship = engine.createShip(1, 1, 0)
+        gameMap = game.gameMap
     }
 
     def "When a ship is destroyed, it no longer reports active"() {
@@ -68,5 +63,97 @@ class TestShip extends Specification {
 
         where:
         direction << [Direction.STILL] + Direction.ALL_CARDINALS
+    }
+
+    def "When a ship at 1,1 is ordered to navigate through a friendly ship at 2,1, it stays still"() {
+        engine.createShip(2, 1, 0)
+        def ship = setupShipForNavigation(0, 2, 1)
+        when:
+        navigateShip(ship)
+        then:
+        ship.position == new Position(1,1)
+    }
+
+    @Unroll
+    def "When a ship at 1,1 is ordered to navigate to 2,1, it makes that move in 1 turn"() {
+        Ship ship = setupShipForNavigation(0, x, y)
+
+        when:
+        navigateShip(ship)
+
+        then:
+        ship.position == ship.destination
+
+        where:
+        x | y
+        2 | 1
+        1 | 2
+        0 | 1
+        1 | 0
+    }
+
+    @Unroll
+    def "When a ship at 1,1 is ordered to navigate to a #x,#y, it makes that move in 2 turns"() {
+        def ship = setupShipForNavigation(0, x, y)
+
+        when:
+        (1..2).forEach({
+            navigateShip(ship)
+        })
+
+        then:
+        ship.position == ship.destination
+
+        where:
+        x << [0, 2, 2, 0]
+        y << [0, 2, 0, 2]
+    }
+
+    @Unroll
+    def "When a ship at #startX,#startY is ordered to navigate to #endX,#endY, it makes that move in #turns turns"() {
+        def ship = setupShipForNavigation(0, endX, endY)
+        engine.updateShipPosition(0, startX, startY)
+
+        when:
+        (0..<turns).stream().forEach({
+            navigateShip(ship)
+        })
+
+        then:
+        ship.position == ship.destination
+
+        where:
+        startX | startY | endX | endY || turns
+        0      | 0      | 1    | 1    || 2
+        0      | 0      | 2    | 2    || 4
+        2      | 2      | 0    | 0    || 4
+    }
+
+    def "When a ship at 0,1 is ordered to navigate to 2,1, with an obstacle at 1,1 it makes that move in 4 turns"() {
+        def ship = setupShipForNavigation(0, 2, 1)
+        engine.updateShipPosition(0, 0, 1)
+        def obstacle = engine.createShip(1, 1, 0)
+
+        when:
+        (0..<4).stream().forEach({
+            navigateShip(ship)
+        })
+
+        then:
+        ship.position == ship.destination
+        obstacle.active
+        ship.active
+    }
+
+    void navigateShip(Ship ship) {
+        engine.endTurn([ship.navigate()])
+        engine.updateFrame()
+    }
+
+    Ship setupShipForNavigation(int shipId, int x, int y) {
+        def ship = getShip(shipId)
+        def destination = new Position(x, y)
+        ship.destination = destination
+        return ship
     }
 }

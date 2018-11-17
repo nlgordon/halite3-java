@@ -40,7 +40,7 @@ class TestFakeGameEngineMovement extends BaseTestFakeGameEngine {
         moveShip(0, Direction.NORTH)
 
         then:
-        getShip(0).position == new Position(0, 1)
+        getShip(0).position == new Position(0, 2)
     }
 
     def "Moving east from 0,0 updates the gameMap at 1,0 with the ship"() {
@@ -55,6 +55,7 @@ class TestFakeGameEngineMovement extends BaseTestFakeGameEngine {
     def "A ship at the shipyard at updateFrame adds its halite to the player's reserves"() {
         setup:
         getShip(0).halite = 100
+        moveShipToShipyard(0)
         when:
         engine.updateFrame()
         then:
@@ -64,6 +65,7 @@ class TestFakeGameEngineMovement extends BaseTestFakeGameEngine {
     def "A ship at the shipyard at updateFrame will have its hold emptied"() {
         setup:
         getShip(0).halite = 100
+        moveShipToShipyard(0)
         when:
         engine.updateFrame()
         then:
@@ -73,7 +75,7 @@ class TestFakeGameEngineMovement extends BaseTestFakeGameEngine {
     def "A ship moving into the shipyard empties its hold"() {
         setup:
         def ship = getShip(0)
-        ship.position = new Position(1, 0)
+        ship.position = player.shipyard.position.directionalOffset(Direction.EAST)
         ship.halite = 100
         when:
         moveShip(0, Direction.WEST)
@@ -84,7 +86,7 @@ class TestFakeGameEngineMovement extends BaseTestFakeGameEngine {
     def "A ship moving into the shipyard adds its hold to the player's reserves"() {
         def ship = getShip(0)
         setup:
-        ship.position = new Position(1, 0)
+        ship.position = player.shipyard.position.directionalOffset(Direction.EAST)
         ship.halite = 100
         when:
         moveShip(0, Direction.WEST)
@@ -94,7 +96,7 @@ class TestFakeGameEngineMovement extends BaseTestFakeGameEngine {
 
     def "A ship moving retains its halite"() {
         setup:
-        engine.insertShip(1, 1, 100)
+        engine.insertShip(1, 0, 100)
         when:
         moveShip(1, Direction.WEST)
         then:
@@ -103,7 +105,7 @@ class TestFakeGameEngineMovement extends BaseTestFakeGameEngine {
 
     def "A ship with 100 halite moving from a spot with 100 halite results in the ship having 90 halite"() {
         setup:
-        def ship = engine.createShip(1, 0, 100)
+        def ship = engine.createShip(0, 0, 100)
         getMapCell(ship).halite = 100
         when:
         moveShip(1, Direction.SOUTH)

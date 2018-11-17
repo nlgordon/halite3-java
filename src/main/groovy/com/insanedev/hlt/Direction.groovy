@@ -28,6 +28,13 @@ enum Direction {
         }
     }
 
+    List<Direction> getPerpendiculars() {
+        switch (this) {
+            case {it == NORTH || it == SOUTH}: return [EAST, WEST]
+            case {it == EAST || it == WEST}: return [NORTH, SOUTH]
+        }
+    }
+
     Direction(final String charValue) {
         this.charValue = charValue
     }

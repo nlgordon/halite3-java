@@ -1,11 +1,6 @@
 package com.insanedev.fakeengine
 
-import com.insanedev.hlt.Command
-import com.insanedev.hlt.Direction
-import com.insanedev.hlt.Game
-import com.insanedev.hlt.MapCell
-import com.insanedev.hlt.Player
-import com.insanedev.hlt.Ship
+import com.insanedev.hlt.*
 import spock.lang.Specification
 
 class BaseTestFakeGameEngine extends Specification {
@@ -14,7 +9,7 @@ class BaseTestFakeGameEngine extends Specification {
     Player player
 
     def setup() {
-        engine = new FakeGameEngine(Player.create(0, 0, 0), 2, 2)
+        engine = new FakeGameEngine(Player.create(0, 1, 1), 3, 3)
         game = engine.init()
         player = game.me
         engine.updateFrame()
@@ -41,5 +36,9 @@ class BaseTestFakeGameEngine extends Specification {
 
     MapCell getMapCell(Ship ship) {
         return game.gameMap.at(ship)
+    }
+
+    void moveShipToShipyard(int i) {
+        engine.updateShipPosition(i, 1, 1)
     }
 }
