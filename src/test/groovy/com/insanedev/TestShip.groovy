@@ -10,7 +10,7 @@ class TestShip extends BaseTestFakeGameEngine {
     GameMap gameMap
 
     def setup() {
-        ship = engine.createShip(1, 1, 0)
+        ship = engine.createShipAtShipyard()
         gameMap = game.gameMap
     }
 
@@ -143,6 +143,54 @@ class TestShip extends BaseTestFakeGameEngine {
         ship.position == ship.destination
         obstacle.active
         ship.active
+    }
+
+    def "When a ship is spawned, it defaults to exploring"() {
+        expect:
+        getShip(0).status == ShipStatus.EXPLORING
+    }
+
+    @Unroll
+    def "When a ship is exploring, and at the shipyard, and the cell at #x,#y is the only cell with halite, it will navigate there in 1 turn"() {
+        def haliteLocation = new Position(x, y)
+        gameMap[haliteLocation].halite = 1000
+        when:
+        navigateShip(ship)
+        then:
+        ship.position == haliteLocation
+
+        where:
+        x | y
+        2 | 1
+        0 | 1
+        1 | 2
+        1 | 0
+    }
+
+    def "When a ship is exploring, and at the shipyard, and the cell to the right has the highest halite, it will navigate there in 1 turn"() {
+        def haliteLocation = ship.position.directionalOffset(Direction.EAST)
+        gameMap[haliteLocation].halite = 1000
+        gameMap[ship.position.directionalOffset(Direction.WEST)].halite = 500
+        when:
+        navigateShip(ship)
+        then:
+        ship.position == haliteLocation
+    }
+
+    def "When a ship moves, it removes itself from the mapcell"() {
+        when:
+        ship.move(Direction.EAST)
+
+        then:
+        !game.gameMap[ship.position].occupied
+    }
+
+    def "When a ship moves, it places itself on the target square"() {
+        when:
+        ship.move(Direction.EAST)
+
+        then:
+        game.gameMap[new Position(2, 1)].ship == ship
     }
 
     void navigateShip(Ship ship) {

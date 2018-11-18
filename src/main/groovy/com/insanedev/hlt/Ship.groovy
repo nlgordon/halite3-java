@@ -1,6 +1,11 @@
 package com.insanedev.hlt
 
+
 import groovy.transform.EqualsAndHashCode
+
+enum ShipStatus {
+    EXPLORING,NAVIGATING
+}
 
 @EqualsAndHashCode
 class Ship extends Entity {
@@ -8,6 +13,7 @@ class Ship extends Entity {
     boolean destroyed
     final Game game
     Position destination
+    ShipStatus status = ShipStatus.EXPLORING
 
     Ship(Game game, final Player player, final EntityId id, final Position position, final int halite) {
         super(player, id, position)
@@ -26,6 +32,10 @@ class Ship extends Entity {
 
     MoveCommand move(final Direction direction) {
         assertActive()
+        if (direction != Direction.STILL) {
+            game.gameMap[position].ship = null
+        }
+        game.gameMap[position.directionalOffset(direction)].ship = this
         return Command.move(id, direction)
     }
 
@@ -34,9 +44,37 @@ class Ship extends Entity {
         return Command.move(id, Direction.STILL)
     }
 
+    void setDestination(Position position) {
+        this.destination = position
+        this.status = ShipStatus.NAVIGATING
+    }
+
     MoveCommand navigate() {
+        if (status == ShipStatus.NAVIGATING) {
+            return getNavigationMove()
+        } else if (status == ShipStatus.EXPLORING) {
+            return getExplorationMove()
+        }
+
+        return stayStill()
+    }
+
+    MoveCommand getExplorationMove() {
+        PossibleMove recommendedMove = position.possibleMoves()
+                .map({ new PossibleMove(it.first, it.second, game.gameMap[it.second]) })
+                .filter({ it.mapCell.halite > 0 })
+                .sorted({ PossibleMove left, PossibleMove right -> right.mapCell.halite.compareTo(left.mapCell.halite) })
+                .filter({ canMoveToPosition(it.position) })
+                .findFirst()
+                .orElse(new PossibleMove(Direction.STILL, position, game.gameMap[position]))
+
+        return move(recommendedMove.direction)
+    }
+
+    MoveCommand getNavigationMove() {
+        MoveCommand move
         if (!destination || destination == position) {
-            return stayStill()
+            move = stayStill()
         }
 
         int dx = destination.x - position.x
@@ -45,24 +83,25 @@ class Ship extends Entity {
         int absoluteDistance = Math.abs(dx) + Math.abs(dy)
 
         if (absoluteDistance == 0) {
-            return stayStill()
+            move = stayStill()
         } else if (absoluteDistance == 1 && !canMoveToPosition(destination)) {
-            return stayStill()
-        }else {
+            move = stayStill()
+        } else {
             if (Math.abs(dx) >= Math.abs(dy)) {
                 if (dx > 0) {
-                    return getBestNavigationStep(Direction.EAST)
+                    move = getBestNavigationStep(Direction.EAST)
                 } else {
-                    return getBestNavigationStep(Direction.WEST)
+                    move = getBestNavigationStep(Direction.WEST)
                 }
             } else {
                 if (dy > 0) {
-                    return getBestNavigationStep(Direction.SOUTH)
+                    move = getBestNavigationStep(Direction.SOUTH)
                 } else {
-                    return getBestNavigationStep(Direction.NORTH)
+                    move = getBestNavigationStep(Direction.NORTH)
                 }
             }
         }
+        return move
     }
 
     MoveCommand getBestNavigationStep(Direction direction) {
@@ -99,5 +138,17 @@ class Ship extends Entity {
 
     void assertActive() {
         assert !destroyed
+    }
+}
+
+class PossibleMove {
+    Direction direction
+    Position position
+    MapCell mapCell
+
+    PossibleMove(Direction direction, Position position, MapCell mapCell) {
+        this.direction = direction
+        this.position = position
+        this.mapCell = mapCell
     }
 }

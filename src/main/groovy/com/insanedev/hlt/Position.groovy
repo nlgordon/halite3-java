@@ -2,6 +2,8 @@ package com.insanedev.hlt
 
 import groovy.transform.EqualsAndHashCode
 
+import java.util.stream.Stream
+
 @EqualsAndHashCode
 class Position {
     final int x
@@ -12,14 +14,9 @@ class Position {
         this.y = y
     }
 
-    ArrayList<Position> getSurroundingCardinals() {
-        final ArrayList<Position> suroundingCardinals = new ArrayList<>()
-
-        for (final Direction d : Direction.ALL_CARDINALS) {
-            suroundingCardinals.add(directionalOffset(d))
-        }
-
-        return suroundingCardinals
+    Stream<Tuple2<Direction, Position>> possibleMoves() {
+        return Direction.ALL_CARDINALS.stream()
+                .map({new Tuple2<Direction, Position>(it, directionalOffset(it))})
     }
 
     Position directionalOffset(final Direction d) {

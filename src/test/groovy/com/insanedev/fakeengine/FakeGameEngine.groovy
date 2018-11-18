@@ -183,6 +183,14 @@ class FakeGameEngine implements GameEngine {
         this.turnCommands = commands
     }
 
+    Ship createShipAtShipyard() {
+        return createShip(me.shipyard.position, 0)
+    }
+
+    Ship createShip(Position position, int halite) {
+        return createShip(position.x, position.y, halite)
+    }
+
     Ship createShip(int x, int y, int halite) {
         return me.ships[new ShipUpdate(game, new EntityId(maxShipId++), new Position(x, y), halite).apply(me)]
     }
