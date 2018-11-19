@@ -24,13 +24,10 @@ class ShipUpdate extends GameUpdate {
     EntityId apply(Player player) {
         Ship ship = player.ships[id]
         if (ship) {
-            game.gameMap.at(ship).ship = null
-            ship.position = position
-            ship.halite = halite
+            ship.update(position, halite)
         } else {
             ship = player.ships[id] = new Ship(game, player, id, position, halite)
         }
-        game.gameMap.at(ship).ship = ship
 
         Log.debug("Updating player ${player.id} ship ${ship.id} at ${ship.position.x} ${ship.position.y} with halite ${ship.halite}")
 

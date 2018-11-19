@@ -1,10 +1,10 @@
 package com.insanedev.hlt
 
-import groovy.transform.EqualsAndHashCode
+import groovy.transform.Canonical
 
 import java.util.stream.Stream
 
-@EqualsAndHashCode
+@Canonical
 class Position {
     final int x
     final int y
@@ -16,7 +16,7 @@ class Position {
 
     Stream<Tuple2<Direction, Position>> possibleMoves() {
         return Direction.ALL_CARDINALS.stream()
-                .map({new Tuple2<Direction, Position>(it, directionalOffset(it))})
+                .map({ new Tuple2<Direction, Position>(it, directionalOffset(it)) })
     }
 
     Position directionalOffset(final Direction d) {

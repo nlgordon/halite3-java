@@ -3,8 +3,10 @@ package com.insanedev.hlt
 
 import groovy.transform.EqualsAndHashCode
 
+import java.util.stream.Stream
+
 enum ShipStatus {
-    EXPLORING,NAVIGATING
+    EXPLORING, NAVIGATING
 }
 
 @EqualsAndHashCode
@@ -19,6 +21,7 @@ class Ship extends Entity {
         super(player, id, position)
         this.halite = halite
         this.game = game
+        game.gameMap[position].ship = this
     }
 
     boolean isFull() {
@@ -50,31 +53,34 @@ class Ship extends Entity {
     }
 
     MoveCommand navigate() {
-        if (status == ShipStatus.NAVIGATING) {
-            return getNavigationMove()
-        } else if (status == ShipStatus.EXPLORING) {
-            return getExplorationMove()
-        }
-
-        return stayStill()
+        return move(decideMove().direction)
     }
 
-    MoveCommand getExplorationMove() {
-        PossibleMove recommendedMove = position.possibleMoves()
-                .map({ new PossibleMove(it.first, it.second, game.gameMap[it.second]) })
+    PossibleMove decideMove() {
+        PossibleMove decidedMove
+        if (status == ShipStatus.NAVIGATING) {
+            decidedMove = getNavigationMove()
+        } else if (status == ShipStatus.EXPLORING) {
+            decidedMove = getExplorationMove()
+        } else {
+            decidedMove = createPossibleMove(Direction.STILL)
+        }
+        return decidedMove
+    }
+
+    PossibleMove getExplorationMove() {
+        return possibleCardinalMoves()
                 .filter({ it.mapCell.halite > 0 })
                 .sorted({ PossibleMove left, PossibleMove right -> right.mapCell.halite.compareTo(left.mapCell.halite) })
                 .filter({ canMoveToPosition(it.position) })
                 .findFirst()
-                .orElse(new PossibleMove(Direction.STILL, position, game.gameMap[position]))
-
-        return move(recommendedMove.direction)
+                .orElse(createPossibleMove(Direction.STILL))
     }
 
-    MoveCommand getNavigationMove() {
-        MoveCommand move
+    PossibleMove getNavigationMove() {
+        PossibleMove possible = createPossibleMove(Direction.STILL)
         if (!destination || destination == position) {
-            move = stayStill()
+            return possible
         }
 
         int dx = destination.x - position.x
@@ -83,39 +89,44 @@ class Ship extends Entity {
         int absoluteDistance = Math.abs(dx) + Math.abs(dy)
 
         if (absoluteDistance == 0) {
-            move = stayStill()
+            return possible
         } else if (absoluteDistance == 1 && !canMoveToPosition(destination)) {
-            move = stayStill()
+            return possible
         } else {
             if (Math.abs(dx) >= Math.abs(dy)) {
                 if (dx > 0) {
-                    move = getBestNavigationStep(Direction.EAST)
-                } else {
-                    move = getBestNavigationStep(Direction.WEST)
+                    possible = getBestNavigationStep(Direction.EAST)
+                } else if (dx < 0) {
+                    possible = getBestNavigationStep(Direction.WEST)
                 }
-            } else {
+            } else if (Math.abs(dx) < Math.abs(dy)) {
                 if (dy > 0) {
-                    move = getBestNavigationStep(Direction.SOUTH)
-                } else {
-                    move = getBestNavigationStep(Direction.NORTH)
+                    possible = getBestNavigationStep(Direction.SOUTH)
+                } else if (dy < 0) {
+                    possible = getBestNavigationStep(Direction.NORTH)
                 }
             }
         }
-        return move
+        return possible
     }
 
-    MoveCommand getBestNavigationStep(Direction direction) {
+    PossibleMove getBestNavigationStep(Direction direction) {
         if (canMoveInDirection(direction)) {
-            return move(direction)
+            return createPossibleMove(direction)
         }
 
         def perpendiculars = direction.getPerpendiculars()
 
         return perpendiculars.stream()
                 .filter({ canMoveInDirection(it) })
-                .map({ move(it) })
+                .map({ createPossibleMove(it) })
                 .findFirst()
-                .orElse(stayStill())
+                .orElse(createPossibleMove(Direction.STILL))
+    }
+
+    PossibleMove createPossibleMove(Direction direction) {
+        def newPosition = position.directionalOffset(direction)
+        return new PossibleMove(direction, newPosition, game.gameMap[newPosition])
     }
 
     boolean canMoveInDirection(Direction direction) {
@@ -138,6 +149,22 @@ class Ship extends Entity {
 
     void assertActive() {
         assert !destroyed
+    }
+
+    void update(Position newPosition, int newHalite) {
+        game.gameMap[position].ship = null
+        game.gameMap[newPosition].ship = this
+        this.position = newPosition
+        this.halite = newHalite
+
+        if (position == destination && status == ShipStatus.NAVIGATING) {
+            status = ShipStatus.EXPLORING
+        }
+    }
+
+    Stream<PossibleMove> possibleCardinalMoves() {
+        return Direction.ALL_CARDINALS.stream()
+                .map({ createPossibleMove(it) })
     }
 }
 

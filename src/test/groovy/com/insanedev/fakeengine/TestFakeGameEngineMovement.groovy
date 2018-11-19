@@ -6,6 +6,7 @@ class TestFakeGameEngineMovement extends BaseTestFakeGameEngine {
     Ship ship
 
     def setup() {
+        initGame(0, 1, 1, 3, 3)
         ship = engine.createShip(0, 0, 0)
     }
 

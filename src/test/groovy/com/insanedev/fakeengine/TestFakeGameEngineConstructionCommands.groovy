@@ -4,6 +4,10 @@ import com.insanedev.hlt.EntityId
 import com.insanedev.hlt.Position
 
 class TestFakeGameEngineConstructionCommands extends BaseTestFakeGameEngine {
+    def setup() {
+        initGame(0, 1, 1, 3, 3)
+    }
+
     def "Submitting a spawn ship command creates a ship on the subsequent update frame"() {
         when:
         spawnShip()

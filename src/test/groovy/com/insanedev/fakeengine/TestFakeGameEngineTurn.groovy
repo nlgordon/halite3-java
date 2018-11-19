@@ -3,6 +3,7 @@ package com.insanedev.fakeengine
 class TestFakeGameEngineTurn extends BaseTestFakeGameEngine {
 
     def setup() {
+        initGame(0, 1, 1, 3, 3)
         spawnShip()
     }
 

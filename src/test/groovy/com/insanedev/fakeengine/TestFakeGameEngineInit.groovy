@@ -3,6 +3,11 @@ package com.insanedev.fakeengine
 import com.insanedev.hlt.Game
 
 class TestFakeGameEngineInit extends BaseTestFakeGameEngine {
+
+    def setup() {
+        initGame(0, 1, 1, 3, 3)
+    }
+
     def "Engine Can initialize a game with one player"() {
         expect:
         engine.init().me == player

@@ -10,6 +10,7 @@ class TestShip extends BaseTestFakeGameEngine {
     GameMap gameMap
 
     def setup() {
+        initGame(0, 1, 1, 3, 3)
         ship = engine.createShipAtShipyard()
         gameMap = game.gameMap
     }
@@ -193,15 +194,15 @@ class TestShip extends BaseTestFakeGameEngine {
         game.gameMap[new Position(2, 1)].ship == ship
     }
 
-    void navigateShip(Ship ship) {
-        engine.endTurn([ship.navigate()])
-        engine.updateFrame()
+    def "When a navigating ship reaches it's destination, it switches to exploring on the next updateFrame"() {
+        setup:
+        def ship = setupShipForNavigation(0, 2, 1)
+        when:
+        navigateShip(ship)
+
+        then:
+        ship.status == ShipStatus.EXPLORING
     }
 
-    Ship setupShipForNavigation(int shipId, int x, int y) {
-        def ship = getShip(shipId)
-        def destination = new Position(x, y)
-        ship.destination = destination
-        return ship
-    }
+
 }

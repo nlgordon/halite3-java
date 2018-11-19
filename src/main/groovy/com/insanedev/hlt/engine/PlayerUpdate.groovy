@@ -5,7 +5,7 @@ import com.insanedev.hlt.PlayerId
 
 class PlayerUpdate extends GameUpdate {
     final PlayerId id
-    final int halite
+    int halite
     final List<ShipUpdate> shipUpdates
     final List<DropoffUpdate> dropoffUpdates
 

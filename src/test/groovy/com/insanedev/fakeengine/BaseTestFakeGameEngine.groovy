@@ -8,8 +8,8 @@ class BaseTestFakeGameEngine extends Specification {
     Game game
     Player player
 
-    def setup() {
-        engine = new FakeGameEngine(Player.create(0, 1, 1), 3, 3)
+    void initGame(int playerId, int shipyardX, int shipyardY, int mapWidth, int mapHeight) {
+        engine = new FakeGameEngine(Player.create(playerId, shipyardX, shipyardY), mapWidth, mapHeight)
         game = engine.init()
         player = game.me
         engine.updateFrame()
@@ -40,5 +40,17 @@ class BaseTestFakeGameEngine extends Specification {
 
     void moveShipToShipyard(int i) {
         engine.updateShipPosition(i, 1, 1)
+    }
+
+    void navigateShip(Ship ship) {
+        engine.endTurn([ship.navigate()])
+        engine.updateFrame()
+    }
+
+    Ship setupShipForNavigation(int shipId, int x, int y) {
+        def ship = getShip(shipId)
+        def destination = new Position(x, y)
+        ship.destination = destination
+        return ship
     }
 }

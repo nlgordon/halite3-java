@@ -4,6 +4,10 @@ import com.insanedev.hlt.Game
 
 class TestFakeGameEnginePlayers extends BaseTestFakeGameEngine {
 
+    def setup() {
+        initGame(0, 1, 1, 3, 3)
+    }
+
     def "On first call to updateFrame, the player is set to 5000 halite"() {
         setup:
         Game game = engine.init()
