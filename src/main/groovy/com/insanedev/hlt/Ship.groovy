@@ -89,40 +89,48 @@ class Ship extends Entity {
     Direction getNavigationDirection() {
         Direction direction = Direction.STILL
         if (destination) {
-            int dx = destination.x - position.x
-            int dy = destination.y - position.y
-
-            int absoluteDistance = Math.abs(dx) + Math.abs(dy)
+            int absoluteDistance = calculateDistance(destination)
 
             if (absoluteDistance == 0) {
                 direction = Direction.STILL
             } else if (absoluteDistance == 1 && !canMoveToPosition(destination)) {
                 direction = Direction.STILL
             } else {
-                direction = getDesiredDirection(dx, dy)
+                direction = getDesiredDirection()
             }
         }
         return direction
     }
 
-    Direction getDesiredDirection(int dx, int dy) {
+    int calculateDistance(Position other) {
+        return game.gameMap.calculateDistance(position, other)
+    }
+
+    Direction getDesiredDirection() {
+        int dx = destination.x - position.x
+        int dy = destination.y - position.y
+        int absDx = Math.abs(dx)
+        int absDy = Math.abs(dy)
+        int wrapped_dx = game.gameMap.width - absDx
+        int wrapped_dy = game.gameMap.width - absDy
+
         Direction direction = Direction.STILL
-        if (Math.abs(dx) >= Math.abs(dy)) {
+
+        if (absDx >= absDy) {
             if (dx > 0) {
-                direction = Direction.EAST
+                direction = absDx < wrapped_dx ? Direction.EAST : Direction.WEST
             } else if (dx < 0) {
-                direction = Direction.WEST
+                direction = absDx < wrapped_dx ? Direction.WEST : Direction.EAST
             }
-        } else if (Math.abs(dx) < Math.abs(dy)) {
+        } else if (absDx < absDy) {
             if (dy > 0) {
-                direction = Direction.SOUTH
+                direction = absDy < wrapped_dy ? Direction.SOUTH : Direction.NORTH
             } else if (dy < 0) {
-                direction = Direction.NORTH
+                direction = absDy < wrapped_dy ? Direction.NORTH : Direction.SOUTH
             }
         }
         return direction
     }
-
 
     PossibleMove createPossibleMove(Direction direction) {
         def newPosition = position.directionalOffset(direction)

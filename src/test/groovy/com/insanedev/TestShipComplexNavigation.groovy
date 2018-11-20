@@ -31,4 +31,18 @@ class TestShipComplexNavigation extends BaseTestFakeGameEngine {
         shipOne.position == shipTwoStart
         shipTwo.position == shipOneStart
     }
+
+    def "When a ship at 0,1 is ordered to navigate to 2,1, with an obstacle at 1,1 it makes that move in 4 turns"() {
+        def ship = engine.createShip(0, 1, 0)
+        setupShipForNavigation(ship.id.id, 2, 1)
+        def obstacle = engine.createShip(1, 1, 0)
+
+        when:
+        runTurns(4)
+
+        then:
+        ship.position == ship.destination
+        obstacle.active
+        ship.active
+    }
 }

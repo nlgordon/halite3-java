@@ -126,18 +126,32 @@ class TestShip extends BaseTestFakeGameEngine {
         2      | 2      | 0    | 0    || 4
     }
 
-    def "When a ship at 0,1 is ordered to navigate to 2,1, with an obstacle at 1,1 it makes that move in 4 turns"() {
-        def ship = setupShipForNavigation(0, 2, 1)
-        engine.updateShipPosition(0, 0, 1)
+    @Unroll
+    def "When a ship at #startX,#startY is ordered to navigate to #endX,#endY, with an obstacle at 1,1 on a 3x3 map, it makes that move in 1 turn"() {
+        def ship = setupShipForNavigation(0, endX, endY)
+        engine.updateShipPosition(0, startX, startY)
         def obstacle = engine.createShip(1, 1, 0)
 
         when:
-        runTurns(4)
+        runTurns(1)
 
         then:
         ship.position == ship.destination
         obstacle.active
         ship.active
+
+        where:
+        startX | startY | endX | endY
+        0      | 1      | 2    | 1
+        2      | 1      | 0    | 1
+        1      | 0      | 1    | 2
+        1      | 2      | 1    | 0
+    }
+
+    def "Testing game map position methods"() {
+        expect:
+        game.gameMap.normalize(new Position(4,4)) == new Position(1,1)
+        game.gameMap.calculateDistance(new Position(0,1), new Position(2,1)) == 1
     }
 
     def "When a ship is spawned, it defaults to exploring"() {
