@@ -9,7 +9,7 @@ enum ShipStatus {
     EXPLORING, NAVIGATING
 }
 
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 class Ship extends Entity {
     int halite
     boolean destroyed

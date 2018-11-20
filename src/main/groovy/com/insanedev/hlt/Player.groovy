@@ -62,17 +62,25 @@ class Player {
     }
 
     List<MoveCommand> navigateShips() {
-        Map<Boolean, List<PossibleMove>> desiredMoves = getAllShipDesiredMoves()
-        return executeEasyMoves(desiredMoves) + executeHardMoves(desiredMoves)
+        List<PossibleMove> desiredMoves = collectDesiredMoves()
+        Map<Boolean, List<PossibleMove>> groupedMoves = desiredMoves.groupBy({ it.ableToMove })
+
+        List<PossibleMove> easyMoves = groupedMoves.getOrDefault(true, [])
+        // Now process hard moves to see if any are possible now
+        List<MoveCommand> executedCommands = executeMoves(easyMoves)
+        return executedCommands + executeHardMoves(groupedMoves)
     }
 
-    Map<Boolean, List<PossibleMove>> getAllShipDesiredMoves() {
-        Map<Boolean, List<PossibleMove>> desiredMoves = ships.values().stream()
+    private List<PossibleMove> collectDesiredMoves() {
+        ships.values().stream()
                 .map({ it.getDesiredMove() })
                 .collect(Collectors.toList())
-                .groupBy({ it.ableToMove })
-        return desiredMoves
     }
+
+    private Collection executeMoves(List<PossibleMove> moves) {
+        moves.stream().map({ it.executeMove() }).collect()
+    }
+
 
     List<MoveCommand> executeHardMoves(Map<Boolean, List<PossibleMove>> desiredMoves) {
         if (desiredMoves[false]) {

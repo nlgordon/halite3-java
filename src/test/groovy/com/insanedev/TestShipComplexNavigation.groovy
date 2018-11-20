@@ -45,4 +45,22 @@ class TestShipComplexNavigation extends BaseTestFakeGameEngine {
         obstacle.active
         ship.active
     }
+
+    def "When a horizontal line of 2 ships at 2,2 want to move east, they move together"() {
+        def shipOneStart = new Position(2, 2)
+        def shipTwoStart = new Position(3, 2)
+        def shipOne = engine.createShip(shipOneStart, 0)
+        def shipTwo = engine.createShip(shipTwoStart, 0)
+        def destination = new Position(6,2)
+
+        shipOne.destination = destination
+        shipTwo.destination = destination
+
+        when:
+        runTurns(1)
+
+        then:
+        shipOne.position == new Position(3, 2)
+        shipTwo.position == new Position(4,2)
+    }
 }
