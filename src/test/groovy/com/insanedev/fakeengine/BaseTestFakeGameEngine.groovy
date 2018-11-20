@@ -3,6 +3,8 @@ package com.insanedev.fakeengine
 import com.insanedev.hlt.*
 import spock.lang.Specification
 
+import java.util.stream.IntStream
+
 class BaseTestFakeGameEngine extends Specification {
     FakeGameEngine engine
     Game game
@@ -42,8 +44,14 @@ class BaseTestFakeGameEngine extends Specification {
         engine.updateShipPosition(i, 1, 1)
     }
 
-    void navigateShip(Ship ship) {
-        engine.endTurn([ship.navigate()])
+    void runTurns(int count) {
+        IntStream.range(0, count).forEach({
+            navigateShips()
+        })
+    }
+
+    void navigateShips() {
+        engine.endTurn(player.navigateShips())
         engine.updateFrame()
     }
 

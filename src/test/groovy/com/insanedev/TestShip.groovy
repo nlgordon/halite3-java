@@ -70,17 +70,17 @@ class TestShip extends BaseTestFakeGameEngine {
         engine.createShip(2, 1, 0)
         def ship = setupShipForNavigation(0, 2, 1)
         when:
-        navigateShip(ship)
+        navigateShips()
         then:
         ship.position == new Position(1,1)
     }
 
     @Unroll
-    def "When a ship at 1,1 is ordered to navigate to 2,1, it makes that move in 1 turn"() {
+    def "When a ship at 1,1 is ordered to navigate to #x,#y, it makes that move in 1 turn"() {
         Ship ship = setupShipForNavigation(0, x, y)
 
         when:
-        navigateShip(ship)
+        navigateShips()
 
         then:
         ship.position == ship.destination
@@ -98,9 +98,7 @@ class TestShip extends BaseTestFakeGameEngine {
         def ship = setupShipForNavigation(0, x, y)
 
         when:
-        (1..2).forEach({
-            navigateShip(ship)
-        })
+        runTurns(2)
 
         then:
         ship.position == ship.destination
@@ -116,9 +114,7 @@ class TestShip extends BaseTestFakeGameEngine {
         engine.updateShipPosition(0, startX, startY)
 
         when:
-        (0..<turns).stream().forEach({
-            navigateShip(ship)
-        })
+        runTurns(turns)
 
         then:
         ship.position == ship.destination
@@ -136,9 +132,7 @@ class TestShip extends BaseTestFakeGameEngine {
         def obstacle = engine.createShip(1, 1, 0)
 
         when:
-        (0..<4).stream().forEach({
-            navigateShip(ship)
-        })
+        runTurns(4)
 
         then:
         ship.position == ship.destination
@@ -156,7 +150,7 @@ class TestShip extends BaseTestFakeGameEngine {
         def haliteLocation = new Position(x, y)
         gameMap[haliteLocation].halite = 1000
         when:
-        navigateShip(ship)
+        navigateShips()
         then:
         ship.position == haliteLocation
 
@@ -173,7 +167,7 @@ class TestShip extends BaseTestFakeGameEngine {
         gameMap[haliteLocation].halite = 1000
         gameMap[ship.position.directionalOffset(Direction.WEST)].halite = 500
         when:
-        navigateShip(ship)
+        navigateShips()
         then:
         ship.position == haliteLocation
     }
@@ -198,7 +192,7 @@ class TestShip extends BaseTestFakeGameEngine {
         setup:
         def ship = setupShipForNavigation(0, 2, 1)
         when:
-        navigateShip(ship)
+        navigateShips()
 
         then:
         ship.status == ShipStatus.EXPLORING

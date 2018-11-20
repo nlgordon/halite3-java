@@ -3,9 +3,6 @@ package com.insanedev
 import com.insanedev.fakeengine.BaseTestFakeGameEngine
 import com.insanedev.hlt.Position
 
-import java.util.stream.IntStream
-import java.util.stream.Stream
-
 class TestShipComplexNavigation extends BaseTestFakeGameEngine {
 
     def setup() {
@@ -28,11 +25,7 @@ class TestShipComplexNavigation extends BaseTestFakeGameEngine {
         shipTwo.destination = shipOneStart
 
         when:
-        IntStream.range(0, 3).forEach({
-            println("1: ${shipOne.position} 2: ${shipTwo.position}")
-            engine.endTurn(Stream.of(shipOne, shipTwo).collect({ it.navigate() }).collect())
-            engine.updateFrame()
-        })
+        runTurns(3)
 
         then:
         shipOne.position == shipTwoStart

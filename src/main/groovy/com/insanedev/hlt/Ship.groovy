@@ -52,90 +52,85 @@ class Ship extends Entity {
         this.status = ShipStatus.NAVIGATING
     }
 
-    MoveCommand navigate() {
-        return move(decideMove().direction)
-    }
-
-    PossibleMove decideMove() {
-        PossibleMove decidedMove
+    PossibleMove getDesiredMove() {
+        PossibleMove desiredMove
         if (status == ShipStatus.NAVIGATING) {
-            decidedMove = getNavigationMove()
+            desiredMove = getDesiredNavigationMove()
         } else if (status == ShipStatus.EXPLORING) {
-            decidedMove = getExplorationMove()
+            desiredMove = getExplorationMove()
         } else {
-            decidedMove = createPossibleMove(Direction.STILL)
+            desiredMove = createPossibleMove(Direction.STILL)
         }
-        return decidedMove
+        return desiredMove
     }
 
     PossibleMove getExplorationMove() {
         return possibleCardinalMoves()
                 .filter({ it.mapCell.halite > 0 })
                 .sorted({ PossibleMove left, PossibleMove right -> right.mapCell.halite.compareTo(left.mapCell.halite) })
-                .filter({ canMoveToPosition(it.position) })
+                .filter({ it.ableToMove })
                 .findFirst()
                 .orElse(createPossibleMove(Direction.STILL))
     }
 
-    PossibleMove getNavigationMove() {
-        PossibleMove possible = createPossibleMove(Direction.STILL)
-        if (!destination || destination == position) {
-            return possible
-        }
+    PossibleMove getAlternateRoute(Direction direction) {
+        def perpendiculars = direction.getPerpendiculars()
+        return perpendiculars.stream()
+                .map({ createPossibleMove(it) })
+                .filter({ it.ableToMove })
+                .findFirst()
+                .orElse(createPossibleMove(Direction.STILL))
+    }
 
-        int dx = destination.x - position.x
-        int dy = destination.y - position.y
+    PossibleMove getDesiredNavigationMove() {
+        return createPossibleMove(getNavigationDirection())
+    }
 
-        int absoluteDistance = Math.abs(dx) + Math.abs(dy)
+    Direction getNavigationDirection() {
+        Direction direction = Direction.STILL
+        if (destination) {
+            int dx = destination.x - position.x
+            int dy = destination.y - position.y
 
-        if (absoluteDistance == 0) {
-            return possible
-        } else if (absoluteDistance == 1 && !canMoveToPosition(destination)) {
-            return possible
-        } else {
-            if (Math.abs(dx) >= Math.abs(dy)) {
-                if (dx > 0) {
-                    possible = getBestNavigationStep(Direction.EAST)
-                } else if (dx < 0) {
-                    possible = getBestNavigationStep(Direction.WEST)
-                }
-            } else if (Math.abs(dx) < Math.abs(dy)) {
-                if (dy > 0) {
-                    possible = getBestNavigationStep(Direction.SOUTH)
-                } else if (dy < 0) {
-                    possible = getBestNavigationStep(Direction.NORTH)
-                }
+            int absoluteDistance = Math.abs(dx) + Math.abs(dy)
+
+            if (absoluteDistance == 0) {
+                direction = Direction.STILL
+            } else if (absoluteDistance == 1 && !canMoveToPosition(destination)) {
+                direction = Direction.STILL
+            } else {
+                direction = getDesiredDirection(dx, dy)
             }
         }
-        return possible
+        return direction
     }
 
-    PossibleMove getBestNavigationStep(Direction direction) {
-        if (canMoveInDirection(direction)) {
-            return createPossibleMove(direction)
+    Direction getDesiredDirection(int dx, int dy) {
+        Direction direction = Direction.STILL
+        if (Math.abs(dx) >= Math.abs(dy)) {
+            if (dx > 0) {
+                direction = Direction.EAST
+            } else if (dx < 0) {
+                direction = Direction.WEST
+            }
+        } else if (Math.abs(dx) < Math.abs(dy)) {
+            if (dy > 0) {
+                direction = Direction.SOUTH
+            } else if (dy < 0) {
+                direction = Direction.NORTH
+            }
         }
-
-        def perpendiculars = direction.getPerpendiculars()
-
-        return perpendiculars.stream()
-                .filter({ canMoveInDirection(it) })
-                .map({ createPossibleMove(it) })
-                .findFirst()
-                .orElse(createPossibleMove(Direction.STILL))
+        return direction
     }
+
 
     PossibleMove createPossibleMove(Direction direction) {
         def newPosition = position.directionalOffset(direction)
-        return new PossibleMove(direction, newPosition, game.gameMap[newPosition])
-    }
-
-    boolean canMoveInDirection(Direction direction) {
-        Position newPosition = position.directionalOffset(direction)
-        return canMoveToPosition(newPosition)
+        return new PossibleMove(direction, newPosition, game.gameMap[newPosition], this)
     }
 
     boolean canMoveToPosition(Position newPosition) {
-        return !game.gameMap[newPosition].occupied
+        return !game.gameMap[newPosition].occupied || newPosition == position
     }
 
     void destroy() {
@@ -172,10 +167,24 @@ class PossibleMove {
     Direction direction
     Position position
     MapCell mapCell
+    Ship ship
 
-    PossibleMove(Direction direction, Position position, MapCell mapCell) {
+    PossibleMove(Direction direction, Position position, MapCell mapCell, Ship ship) {
         this.direction = direction
         this.position = position
         this.mapCell = mapCell
+        this.ship = ship
+    }
+
+    boolean isAbleToMove() {
+        return !mapCell.occupied || mapCell.ship == ship
+    }
+
+    MoveCommand executeMove() {
+        return ship.move(direction)
+    }
+
+    PossibleMove getAlternateRoute() {
+        return ship.getAlternateRoute(direction)
     }
 }
