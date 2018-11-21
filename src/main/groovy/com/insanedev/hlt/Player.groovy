@@ -103,7 +103,7 @@ class Player {
         return first.stream().filter({ it.executed }).map({ it.command }).collect()
     }
 
-    private List<PossibleMove> collectDesiredMoves() {
+    List<PossibleMove> collectDesiredMoves() {
         return getActiveShips()
                 .map({ it.getDesiredMove() })
                 .collect(Collectors.toList())
@@ -128,13 +128,16 @@ class Player {
         }).collect()
     }
 
-    // TODO: Need to handle a chain that wraps around on itself - 5 ships in a loop with one pushing in
     List<PossibleMove> chainRequiredMoves(List<PossibleMove> movesSoFar, Map<Ship, PossibleMove> poolOfMoves, PossibleMove currentMove, Ship startingShip) {
         def blockingShip = currentMove.mapCell.ship
+        boolean blockingShipAlreadySeen = movesSoFar.stream().anyMatch({it.ship == blockingShip})
         if (!poolOfMoves.containsKey(blockingShip)) {
             // Reached a dead end
             return []
         } else if (startingShip != blockingShip) {
+            if (blockingShipAlreadySeen && startingShip != blockingShip) {
+                return []
+            }
             def blockingMove = poolOfMoves[blockingShip]
             return chainRequiredMoves(movesSoFar + currentMove, poolOfMoves, blockingMove, startingShip)
         }
