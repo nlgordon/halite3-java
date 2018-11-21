@@ -2,6 +2,7 @@ package com.insanedev
 
 import com.insanedev.fakeengine.BaseTestFakeGameEngine
 import com.insanedev.hlt.*
+import spock.lang.Ignore
 import spock.lang.Unroll
 
 class TestShip extends BaseTestFakeGameEngine {
@@ -66,7 +67,8 @@ class TestShip extends BaseTestFakeGameEngine {
         direction << [Direction.STILL] + Direction.ALL_CARDINALS
     }
 
-    def "When a ship at 1,1 is ordered to navigate through a friendly ship at 2,1, it stays still"() {
+    @Ignore
+    def "When a ship at 1,1 is ordered to navigate through a ship that doesn't declare a move at 2,1, it stays still"() {
         engine.createShip(2, 1, 0)
         def ship = setupShipForNavigation(0, 2, 1)
         when:

@@ -65,6 +65,7 @@ class Ship extends Entity {
     }
 
     PossibleMove getExplorationMove() {
+        // TODO: This doesn't include staying still
         return possibleCardinalMoves()
                 .filter({ it.mapCell.halite > 0 })
                 .sorted({ PossibleMove left, PossibleMove right -> right.mapCell.halite.compareTo(left.mapCell.halite) })
@@ -92,8 +93,6 @@ class Ship extends Entity {
             int absoluteDistance = calculateDistance(destination)
 
             if (absoluteDistance == 0) {
-                direction = Direction.STILL
-            } else if (absoluteDistance == 1 && !canMoveToPosition(destination)) {
                 direction = Direction.STILL
             } else {
                 direction = getDesiredDirection()
@@ -176,6 +175,7 @@ class PossibleMove {
     Position position
     MapCell mapCell
     Ship ship
+    MoveCommand command
 
     PossibleMove(Direction direction, Position position, MapCell mapCell, Ship ship) {
         this.direction = direction
@@ -188,8 +188,18 @@ class PossibleMove {
         return !mapCell.occupied || mapCell.ship == ship
     }
 
+    void executeIfAble() {
+        if (ableToMove) {
+            executeMove()
+        }
+    }
+
+    boolean isExecuted() {
+        return command != null
+    }
+
     MoveCommand executeMove() {
-        return ship.move(direction)
+        return command = ship.move(direction)
     }
 
     PossibleMove getAlternateRoute() {

@@ -5,6 +5,7 @@ import groovy.transform.EqualsAndHashCode
 
 import java.util.function.Function
 import java.util.stream.Collectors
+import java.util.stream.Stream
 
 @EqualsAndHashCode(includes = "id")
 class Player {
@@ -62,13 +63,43 @@ class Player {
     }
 
     List<MoveCommand> navigateShips() {
-        List<PossibleMove> desiredMoves = collectDesiredMoves()
-        Map<Boolean, List<PossibleMove>> groupedMoves = desiredMoves.groupBy({ it.ableToMove })
+        List<MoveCommand> executedCommands = []
+        Tuple2<List<PossibleMove>, List<MoveCommand>> state = new Tuple2<>(collectDesiredMoves(), executedCommands)
+        state = executeEasyMoves(state)
 
-        List<PossibleMove> easyMoves = groupedMoves.getOrDefault(true, [])
-        // Now process hard moves to see if any are possible now
-        List<MoveCommand> executedCommands = executeMoves(easyMoves)
-        return executedCommands + executeHardMoves(groupedMoves)
+        executedCommands.addAll(state.second)
+
+        return executedCommands + executeHardMoves(state.first)
+    }
+
+    Tuple2<List<PossibleMove>, List<MoveCommand>> executeEasyMoves(Tuple2<List<PossibleMove>, List<MoveCommand>> state) {
+        executeAbleMoves(state.first)
+        if (!hasExecutedMoves(state.first)) {
+            return state
+        }
+        List<MoveCommand> easyExecutedMoves = state.second + getExecutedMoves(state.first)
+
+        List<PossibleMove> hardMoves = getUnexecutedMoves(state.first)
+
+        Tuple2<List<PossibleMove>, List<MoveCommand>> newState = new Tuple2<>(hardMoves, easyExecutedMoves)
+
+        return executeEasyMoves(newState)
+    }
+
+    Collection getUnexecutedMoves(List<PossibleMove> first) {
+        return first.stream().filter({ !it.executed }).collect()
+    }
+
+    boolean hasExecutedMoves(List<PossibleMove> first) {
+        return first.stream().filter({ it.executed }).count()
+    }
+
+    void executeAbleMoves(List<PossibleMove> first) {
+        first.stream().forEach({ it.executeIfAble() })
+    }
+
+    Collection getExecutedMoves(List<PossibleMove> first) {
+        return first.stream().filter({ it.executed }).map({ it.command }).collect()
     }
 
     private List<PossibleMove> collectDesiredMoves() {
@@ -77,39 +108,34 @@ class Player {
                 .collect(Collectors.toList())
     }
 
-    private Collection executeMoves(List<PossibleMove> moves) {
-        moves.stream().map({ it.executeMove() }).collect()
+    List<MoveCommand> executeHardMoves(List<PossibleMove> desiredMoves) {
+        Map<Ship, PossibleMove> coordinatingMoves = possibleMovesToMapByShip(desiredMoves)
+        return coordinatingMoves.values().collect().stream()
+                .filter({ coordinatingMoves.containsKey(it.ship) }).flatMap({
+            List<PossibleMove> chainOfMoves = chainRequiredMoves([], coordinatingMoves, it, it.ship)
+            if (chainOfMoves) {
+                chainOfMoves.stream().forEach({coordinatingMoves.remove(it.ship)})
+                return chainOfMoves.stream().map({it.executeMove()})
+            } else {
+                return Stream.of(it.getAlternateRoute().executeMove())
+            }
+        }).collect()
     }
 
-
-    List<MoveCommand> executeHardMoves(Map<Boolean, List<PossibleMove>> desiredMoves) {
-        if (desiredMoves[false]) {
-            Map<Ship, PossibleMove> coordinatingMoves = desiredMoves[false].stream()
-                    .collect(Collectors.toMap({ it.ship }, Function.identity()))
-            return coordinatingMoves.values().collect().stream()
-                    .filter({ coordinatingMoves.containsKey(it.ship) }).flatMap({
-                def blockingShip = it.mapCell.ship
-                if (coordinatingMoves.containsKey(blockingShip)) {
-                    // Recursive dig through map until we form a loop, which then results in execution, or else find alternate routes
-                    def blockingMove = coordinatingMoves[blockingShip]
-
-                    if (blockingMove.mapCell.ship == it.ship) {
-                        // We formed a loop of two! Execute the moves!
-                        coordinatingMoves.remove(blockingShip)
-                        return [it.executeMove(), blockingMove.executeMove()].stream()
-                    }
-                } else {
-                    return [it.getAlternateRoute().executeMove()].stream()
-                }
-            }).collect()
+    List<PossibleMove> chainRequiredMoves(List<PossibleMove> movesSoFar, Map<Ship, PossibleMove> poolOfMoves, PossibleMove currentMove, Ship startingShip) {
+        def blockingShip = currentMove.mapCell.ship
+        if (!poolOfMoves.containsKey(blockingShip)) {
+            // Reached a dead end
+            return []
+        } else if (startingShip != blockingShip) {
+            def blockingMove = poolOfMoves[blockingShip]
+            return chainRequiredMoves(movesSoFar + currentMove, poolOfMoves, blockingMove, startingShip)
         }
-        return []
+        return movesSoFar + currentMove
     }
 
-    List<MoveCommand> executeEasyMoves(Map<Boolean, List<PossibleMove>> desiredMoves) {
-        if (desiredMoves[true]) {
-            return desiredMoves[true].stream().map({ it.executeMove() }).collect()
-        }
-        return []
+    Map<Ship, PossibleMove> possibleMovesToMapByShip(List<PossibleMove> desiredMoves) {
+        return desiredMoves.stream()
+                .collect(Collectors.toMap({ it.ship }, Function.identity()))
     }
 }

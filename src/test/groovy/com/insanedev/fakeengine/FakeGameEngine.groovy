@@ -47,6 +47,7 @@ class FakeGameEngine implements GameEngine {
         return game
     }
 
+    // TODO: destroyed ships don't have an updated position
     @Override
     void updateFrame() {
         turn++
