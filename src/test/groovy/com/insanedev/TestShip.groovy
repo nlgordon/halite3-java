@@ -59,6 +59,15 @@ class TestShip extends BaseTestFakeGameEngine {
         thrown(Error)
     }
 
+    def "When a ship is destroyed, it can no longer report a desired move"() {
+        when:
+        ship.destroy()
+        ship.getDesiredMove()
+
+        then:
+        thrown(Error)
+    }
+
     def "When a ship is ordered to move, it returns an MoveCommand with direction specified"() {
         expect:
         ship.move(direction).direction == direction
@@ -214,10 +223,20 @@ class TestShip extends BaseTestFakeGameEngine {
         ship.destination == player.shipyard.position
     }
 
-    def "When a ship at 0,0 with 0 halite on board, and 100 halite in the map cell, will desire to stay still"() {
+    def "When a navigating ship at 0,0 with 0 halite on board, and 100 halite in the map cell, will desire to stay still"() {
         engine.updateShipPosition(0, 0, 0)
         gameMap[new Position(0, 0)].halite = 100
         ship.destination = new Position(1,1)
+        when:
+        def move = ship.getDesiredMove()
+        then:
+        move.direction == Direction.STILL
+    }
+
+    def "When an exploring ship at 0,0 with 0 halite on board, and 100 halite in the map cell, will desire to stay still"() {
+        engine.updateShipPosition(0, 0, 0)
+        gameMap[new Position(0, 0)].halite = 100
+        gameMap[new Position(1, 0)].halite = 100
         when:
         def move = ship.getDesiredMove()
         then:

@@ -1,6 +1,6 @@
 package com.insanedev.hlt
 
-import com.sun.tools.internal.jxc.ap.Const
+
 import groovy.transform.EqualsAndHashCode
 
 import java.util.stream.Stream
@@ -38,15 +38,11 @@ class Ship extends Entity {
     MoveCommand move(final Direction direction) {
         assertActive()
         if (direction != Direction.STILL) {
+            Log.log("Moving $id ${direction} from ${position} ship halite: $halite cell halite: ${game.gameMap[position].halite}")
             game.gameMap[position].ship = null
         }
         game.gameMap[position.directionalOffset(direction)].ship = this
         return Command.move(id, direction)
-    }
-
-    MoveCommand stayStill() {
-        assertActive()
-        return Command.move(id, Direction.STILL)
     }
 
     void setDestination(Position position) {
@@ -55,6 +51,7 @@ class Ship extends Entity {
     }
 
     PossibleMove getDesiredMove() {
+        assertActive()
         PossibleMove desiredMove
         if (status == ShipStatus.NAVIGATING) {
             desiredMove = getDesiredNavigationMove()
@@ -67,7 +64,7 @@ class Ship extends Entity {
     }
 
     PossibleMove getExplorationMove() {
-        if (game.gameMap[position].halite * 0.25 > minHarvestAmount) {
+        if (game.gameMap[position].halite * 0.25 > minHarvestAmount || !hasHaliteToMove()) {
             return createPossibleMove(Direction.STILL)
         }
         return possibleCardinalMoves()
@@ -79,6 +76,10 @@ class Ship extends Entity {
     }
 
     PossibleMove getAlternateRoute(Direction direction) {
+        // TODO: WTF is going on here to require this if
+        if (direction == Direction.STILL) {
+            return createPossibleMove(Direction.STILL)
+        }
         def perpendiculars = direction.getPerpendiculars()
         return perpendiculars.stream()
                 .map({ createPossibleMove(it) })
@@ -94,6 +95,7 @@ class Ship extends Entity {
     Direction getNavigationDirection() {
         Direction direction = Direction.STILL
         if (!hasHaliteToMove()) {
+            Log.log("Unable to move $id due to too little halite of $halite for cell ${game.gameMap[position].halite}")
             return direction
         }
         if (destination) {
@@ -109,7 +111,7 @@ class Ship extends Entity {
     }
 
     boolean hasHaliteToMove() {
-        return halite >= game.gameMap[position].halite * 0.1
+        return halite >= (game.gameMap[position].halite * 0.1)
     }
 
     int calculateDistance(Position other) {

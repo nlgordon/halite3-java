@@ -6,14 +6,6 @@ import com.insanedev.hlt.engine.TextGameEngine
 
 class MyBot {
     static void main(final String[] args) {
-        final long rngSeed
-        if (args.length > 1) {
-            rngSeed = Integer.parseInt(args[1])
-        } else {
-            rngSeed = System.nanoTime()
-        }
-        final Random rng = new Random(rngSeed)
-
         GameEngine gameEngine = new TextGameEngine()
         Game game = gameEngine.init()
         // At this point "game" variable is populated with initial map data.
@@ -22,14 +14,12 @@ class MyBot {
         gameEngine.ready("MyJavaBot")
 
         Log.log("Successfully created bot! My Player ID is " + game.myId)
-        Log.enableDebugging()
+//        Log.enableDebugging()
+        final Player me = game.me
+        final GameMap gameMap = game.gameMap
 
         for (; ;) {
             gameEngine.updateFrame()
-            final Player me = game.me
-            final GameMap gameMap = game.gameMap
-
-            final ArrayList<Command> commandQueue = new ArrayList<>()
 
             /* Phases of Turn Loop
              *
@@ -44,23 +34,16 @@ class MyBot {
              * Calculate Ship Moves
              */
 
-            me.ships.values().findAll({it.active}).each({Ship ship ->
-                if (gameMap.at(ship).halite < Constants.MAX_HALITE / 10 || ship.isFull()) {
-                    final Direction randomDirection = Direction.ALL_CARDINALS.get(rng.nextInt(4))
-                    Log.log("Moving ${ship.id} $randomDirection")
-                    commandQueue.add(ship.move(randomDirection))
-                } else {
-                    Log.log("Not moving ${ship.id}")
-                    commandQueue.add(ship.stayStill())
-                }
-            })
+            List<Command> turnCommands = new ArrayList<>()
+            turnCommands.addAll(me.navigateShips())
 
-            if (game.turnNumber <= Constants.MAX_TURNS / 2 && me.halite >= Constants.SHIP_COST && !gameMap.at(me.shipyard).isOccupied()) {
+            // TODO: Spawn collisions seem to be happening when ship is navigating in
+            if (game.turnNumber <= Constants.MAX_TURNS / 2 && me.halite >= Constants.SHIP_COST && !gameMap[me.shipyard].occupied) {
                 Log.log("Spawning Ship")
-                commandQueue.add(me.shipyard.spawn())
+                turnCommands.add(me.shipyard.spawn())
             }
 
-            gameEngine.endTurn(commandQueue)
+            gameEngine.endTurn(turnCommands)
         }
     }
 }

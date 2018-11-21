@@ -62,6 +62,7 @@ class Player {
         }
     }
 
+    // TODO: Ships are still colliding somehow...
     List<MoveCommand> navigateShips() {
         List<MoveCommand> executedCommands = []
         Tuple2<List<PossibleMove>, List<MoveCommand>> state = new Tuple2<>(collectDesiredMoves(), executedCommands)
@@ -103,9 +104,14 @@ class Player {
     }
 
     private List<PossibleMove> collectDesiredMoves() {
-        ships.values().stream()
+        return getActiveShips()
                 .map({ it.getDesiredMove() })
                 .collect(Collectors.toList())
+    }
+
+    Stream<Ship> getActiveShips() {
+        return ships.values().stream()
+                .filter({ it.active })
     }
 
     List<MoveCommand> executeHardMoves(List<PossibleMove> desiredMoves) {
@@ -122,6 +128,7 @@ class Player {
         }).collect()
     }
 
+    // TODO: Need to handle a chain that wraps around on itself - 5 ships in a loop with one pushing in
     List<PossibleMove> chainRequiredMoves(List<PossibleMove> movesSoFar, Map<Ship, PossibleMove> poolOfMoves, PossibleMove currentMove, Ship startingShip) {
         def blockingShip = currentMove.mapCell.ship
         if (!poolOfMoves.containsKey(blockingShip)) {

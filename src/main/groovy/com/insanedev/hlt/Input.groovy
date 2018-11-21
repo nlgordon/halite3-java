@@ -5,7 +5,7 @@ class Input {
     private int current
 
     Input(final String line) {
-        Log.log("Read input: '$line'")
+        Log.debug("Read input: '$line'")
         input = line.split(" ")
     }
 
