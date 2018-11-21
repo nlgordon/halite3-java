@@ -1,6 +1,6 @@
 package com.insanedev.hlt
 
-
+import com.sun.tools.internal.jxc.ap.Const
 import groovy.transform.EqualsAndHashCode
 
 import java.util.stream.Stream
@@ -16,6 +16,8 @@ class Ship extends Entity {
     final Game game
     Position destination
     ShipStatus status = ShipStatus.EXPLORING
+    int minHarvestAmount = 25
+    int fullAmount = Constants.MAX_HALITE
 
     Ship(Game game, final Player player, final EntityId id, final Position position, final int halite) {
         super(player, id, position)
@@ -25,7 +27,7 @@ class Ship extends Entity {
     }
 
     boolean isFull() {
-        return halite >= Constants.MAX_HALITE
+        return halite >= fullAmount
     }
 
     ConstructDropoffCommand makeDropoff() {
@@ -65,7 +67,9 @@ class Ship extends Entity {
     }
 
     PossibleMove getExplorationMove() {
-        // TODO: This doesn't include staying still
+        if (game.gameMap[position].halite * 0.25 > minHarvestAmount) {
+            return createPossibleMove(Direction.STILL)
+        }
         return possibleCardinalMoves()
                 .filter({ it.mapCell.halite > 0 })
                 .sorted({ PossibleMove left, PossibleMove right -> right.mapCell.halite.compareTo(left.mapCell.halite) })
@@ -89,6 +93,9 @@ class Ship extends Entity {
 
     Direction getNavigationDirection() {
         Direction direction = Direction.STILL
+        if (!hasHaliteToMove()) {
+            return direction
+        }
         if (destination) {
             int absoluteDistance = calculateDistance(destination)
 
@@ -99,6 +106,10 @@ class Ship extends Entity {
             }
         }
         return direction
+    }
+
+    boolean hasHaliteToMove() {
+        return halite >= game.gameMap[position].halite * 0.1
     }
 
     int calculateDistance(Position other) {
@@ -136,10 +147,6 @@ class Ship extends Entity {
         return new PossibleMove(direction, newPosition, game.gameMap[newPosition], this)
     }
 
-    boolean canMoveToPosition(Position newPosition) {
-        return !game.gameMap[newPosition].occupied || newPosition == position
-    }
-
     void destroy() {
         destroyed = true
         game.gameMap[this].ship = null
@@ -161,6 +168,8 @@ class Ship extends Entity {
 
         if (position == destination && status == ShipStatus.NAVIGATING) {
             status = ShipStatus.EXPLORING
+        } else if (full) {
+            setDestination(game.me.shipyard.position)
         }
     }
 

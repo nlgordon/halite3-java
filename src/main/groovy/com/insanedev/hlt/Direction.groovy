@@ -28,10 +28,13 @@ enum Direction {
         }
     }
 
+    // Setup a spiral pattern depending on direction of travel
     List<Direction> getPerpendiculars() {
         switch (this) {
-            case {it == NORTH || it == SOUTH}: return [EAST, WEST]
-            case {it == EAST || it == WEST}: return [NORTH, SOUTH]
+            case NORTH: return [EAST, WEST]
+            case SOUTH: return [WEST, EAST]
+            case EAST: return [SOUTH, NORTH]
+            case WEST: return [NORTH, SOUTH]
         }
     }
 

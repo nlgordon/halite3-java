@@ -188,6 +188,42 @@ class TestShip extends BaseTestFakeGameEngine {
         ship.position == haliteLocation
     }
 
+    def "When a ship is exploring and under its full amount, it will harvest its current location if it is over its minimum"() {
+        engine.updateShipPosition(0, 0, 0)
+        ship.halite = 500
+        def start = new Position(0, 0)
+        gameMap[start].halite = 100
+        gameMap[start.directionalOffset(Direction.EAST)].halite = 100
+        gameMap[start.directionalOffset(Direction.SOUTH)].halite = 100
+        ship.minHarvestAmount = 1
+        when:
+        navigateShips()
+        then:
+        ship.position == start
+    }
+
+    def "When a ship is exploring and hits its full amount, it will navigate back to the shipyard"() {
+        engine.updateShipPosition(0, 0, 0)
+        ship.halite = 500
+        def start = new Position(0, 0)
+        gameMap[start].halite = 200
+        ship.fullAmount = 500
+        when:
+        navigateShips()
+        then:
+        ship.destination == player.shipyard.position
+    }
+
+    def "When a ship at 0,0 with 0 halite on board, and 100 halite in the map cell, will desire to stay still"() {
+        engine.updateShipPosition(0, 0, 0)
+        gameMap[new Position(0, 0)].halite = 100
+        ship.destination = new Position(1,1)
+        when:
+        def move = ship.getDesiredMove()
+        then:
+        move.direction == Direction.STILL
+    }
+
     def "When a ship moves, it removes itself from the mapcell"() {
         when:
         ship.move(Direction.EAST)
