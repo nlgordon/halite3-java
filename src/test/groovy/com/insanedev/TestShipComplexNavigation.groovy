@@ -4,6 +4,7 @@ import com.insanedev.fakeengine.BaseTestFakeGameEngine
 import com.insanedev.hlt.Direction
 import com.insanedev.hlt.Position
 import com.insanedev.hlt.Ship
+import com.insanedev.hlt.ShipStatus
 import spock.lang.Unroll
 
 import java.util.stream.IntStream
@@ -83,6 +84,7 @@ class TestShipComplexNavigation extends BaseTestFakeGameEngine {
         def ship = engine.createShip(0, 1, 0)
         setupShipForNavigation(ship.id.id, 2, 1)
         def obstacle = engine.createShip(1, 1, 0)
+        obstacle.status = ShipStatus.HOLDING
 
         when:
         runTurns(4)

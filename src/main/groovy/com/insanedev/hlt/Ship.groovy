@@ -6,7 +6,7 @@ import groovy.transform.EqualsAndHashCode
 import java.util.stream.Stream
 
 enum ShipStatus {
-    EXPLORING, NAVIGATING
+    EXPLORING, NAVIGATING, HOLDING
 }
 
 @EqualsAndHashCode(callSuper = true)
@@ -64,11 +64,12 @@ class Ship extends Entity {
     }
 
     PossibleMove getExplorationMove() {
-        if (game.gameMap[position].halite * 0.25 > minHarvestAmount || !hasHaliteToMove()) {
+        def currentCellHalite = game.gameMap[position].halite
+        if (currentCellHalite * 0.25 > minHarvestAmount || !hasHaliteToMove()) {
             return createPossibleMove(Direction.STILL)
         }
         return possibleCardinalMoves()
-                .filter({ it.mapCell.halite > 0 })
+                .filter({ it.mapCell.halite >= currentCellHalite })
                 .sorted({ PossibleMove left, PossibleMove right -> right.mapCell.halite.compareTo(left.mapCell.halite) })
                 .filter({ it.ableToMove })
                 .findFirst()
@@ -104,7 +105,7 @@ class Ship extends Entity {
             if (absoluteDistance == 0) {
                 direction = Direction.STILL
             } else {
-                direction = getDesiredDirection()
+                direction = getDesiredNavigationDirection()
             }
         }
         return direction
@@ -118,7 +119,7 @@ class Ship extends Entity {
         return game.gameMap.calculateDistance(position, other)
     }
 
-    Direction getDesiredDirection() {
+    Direction getDesiredNavigationDirection() {
         int dx = destination.x - position.x
         int dy = destination.y - position.y
         int absDx = Math.abs(dx)

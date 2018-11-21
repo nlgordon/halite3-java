@@ -2,8 +2,10 @@
 .idea
 /build/
 /Java/
-/replays/
-/*.log
+*.log
+*.hlt
 /halite3-java.iml
 .DS_Store
 /out/
+
+!replays/.keep

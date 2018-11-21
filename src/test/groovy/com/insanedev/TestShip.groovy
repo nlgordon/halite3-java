@@ -11,7 +11,7 @@ class TestShip extends BaseTestFakeGameEngine {
     GameMap gameMap
 
     def setup() {
-        initGame(0, 1, 1, 3, 3)
+        initGame(0, 1, 1, 4, 4)
         ship = engine.createShipAtShipyard()
         gameMap = game.gameMap
     }
@@ -138,7 +138,7 @@ class TestShip extends BaseTestFakeGameEngine {
     }
 
     @Unroll
-    def "When a ship at #startX,#startY is ordered to navigate to #endX,#endY, with an obstacle at 1,1 on a 3x3 map, it makes that move in 1 turn"() {
+    def "When a ship at #startX,#startY is ordered to navigate to #endX,#endY, with an obstacle at 1,1 on a 4x4 map, it makes that move in 1 turn"() {
         def ship = setupShipForNavigation(0, endX, endY)
         engine.updateShipPosition(0, startX, startY)
         def obstacle = engine.createShip(1, 1, 0)
@@ -153,16 +153,10 @@ class TestShip extends BaseTestFakeGameEngine {
 
         where:
         startX | startY | endX | endY
-        0      | 1      | 2    | 1
-        2      | 1      | 0    | 1
-        1      | 0      | 1    | 2
-        1      | 2      | 1    | 0
-    }
-
-    def "Testing game map position methods"() {
-        expect:
-        game.gameMap.normalize(new Position(4,4)) == new Position(1,1)
-        game.gameMap.calculateDistance(new Position(0,1), new Position(2,1)) == 1
+        0      | 1      | 3    | 1
+        3      | 1      | 0    | 1
+        1      | 0      | 1    | 3
+        1      | 3      | 1    | 0
     }
 
     def "When a ship is spawned, it defaults to exploring"() {
@@ -205,6 +199,20 @@ class TestShip extends BaseTestFakeGameEngine {
         gameMap[start.directionalOffset(Direction.EAST)].halite = 100
         gameMap[start.directionalOffset(Direction.SOUTH)].halite = 100
         ship.minHarvestAmount = 1
+        when:
+        navigateShips()
+        then:
+        ship.position == start
+    }
+
+    def "When a ship is exploring and the current cell is under the minimum amount, it will harvest its current location if this cell has more than the surrounding cells"() {
+        engine.updateShipPosition(0, 0, 0)
+        ship.halite = 500
+        def start = new Position(0, 0)
+        gameMap[start].halite = 110
+        gameMap[start.directionalOffset(Direction.EAST)].halite = 100
+        gameMap[start.directionalOffset(Direction.SOUTH)].halite = 100
+        ship.minHarvestAmount = 200
         when:
         navigateShips()
         then:
@@ -267,6 +275,12 @@ class TestShip extends BaseTestFakeGameEngine {
 
         then:
         ship.status == ShipStatus.EXPLORING
+    }
+
+    def "When a ship status is holding, it will return a stay still move"() {
+        ship.status = ShipStatus.HOLDING
+        expect:
+        ship.getDesiredMove().direction == Direction.STILL
     }
 
 
