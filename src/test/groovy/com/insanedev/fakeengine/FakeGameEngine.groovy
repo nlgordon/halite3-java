@@ -7,22 +7,24 @@ class FakeGameEngine implements GameEngine {
     public static final BigDecimal HARVEST_RATIO = 0.25
     public static final BigDecimal MOVE_COST_RATIO = 0.1
     Player me
-    int mapHeight = 1
-    int mapWidth = 1
+    final int mapHeight
+    final int mapWidth
     private Game game
     private Collection<Command> turnCommands = []
     private maxShipId = 0
     private maxDropoffId = 0
     private turn = 0
-
-    FakeGameEngine(Player me) {
-        this.me = me
-    }
+    List<Player> players
 
     FakeGameEngine(Player me, int mapWidth, int mapHeight) {
-        this(me)
+        this([me], mapWidth, mapHeight)
+    }
+
+    FakeGameEngine(List<Player> players, int mapWidth, int mapHeight) {
+        this.me = players[0]
         this.mapHeight = mapHeight
         this.mapWidth = mapWidth
+        this.players = players
     }
 
     @Override
@@ -43,7 +45,8 @@ class FakeGameEngine implements GameEngine {
                 "INSPIRED_MOVE_COST_RATIO" : "0",]
         Constants.populateConstantsFromMap(constants)
         GameMap map = new GameMap(mapWidth, mapHeight)
-        game = new Game(me, [me], map)
+        game = new Game(me, players, map)
+        players.stream().forEach({map[it.shipyard].structure = it.shipyard})
         return game
     }
 
@@ -191,6 +194,10 @@ class FakeGameEngine implements GameEngine {
 
     Ship createShip(int x, int y, int halite) {
         return me.ships[new ShipUpdate(game, new EntityId(maxShipId++), new Position(x, y), halite).apply(me)]
+    }
+
+    Ship createShipForPlayer(int playerId, int x, int y, int halite) {
+        return players[playerId].ships[new ShipUpdate(game, new EntityId(maxShipId++), new Position(x, y), halite).apply(players[playerId])]
     }
 
     void updateShipPosition(int shipId, int x, int y) {

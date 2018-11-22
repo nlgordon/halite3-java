@@ -16,6 +16,9 @@ class MapCell {
     }
 
     boolean isOccupied() {
+        if (hasStructure() && structure.player != this?.ship?.player) {
+            return false
+        }
         return ship != null
     }
 

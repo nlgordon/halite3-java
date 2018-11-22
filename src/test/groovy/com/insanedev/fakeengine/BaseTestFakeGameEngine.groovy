@@ -17,6 +17,16 @@ class BaseTestFakeGameEngine extends Specification {
         engine.updateFrame()
     }
 
+    void initGameWithMultiplePlayers(int player1ShipyardX, int player1ShipyardY, int player2ShipyardX, int player2ShipyardY, int mapWidth, int mapHeight) {
+        def player1 = Player.create(0, player1ShipyardX, player1ShipyardY)
+        def player2 = Player.create(1, player2ShipyardX, player2ShipyardY)
+        List<Player> players = [player1, player2]
+        engine = new FakeGameEngine(players, mapWidth, mapHeight)
+        game = engine.init()
+        player = game.me
+        engine.updateFrame()
+    }
+
     void doNothingTurn() {
         engine.endTurn([])
         engine.updateFrame()

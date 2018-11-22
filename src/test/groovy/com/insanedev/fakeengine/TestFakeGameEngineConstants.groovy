@@ -8,7 +8,7 @@ class TestFakeGameEngineConstants extends Specification {
     private FakeGameEngine engine
 
     def setup() {
-        engine = new FakeGameEngine(Player.create(0, 0, 0))
+        engine = new FakeGameEngine(Player.create(0, 0, 0), 1, 1)
     }
 
     def "Engine initalizes MAX_HALITE"() {

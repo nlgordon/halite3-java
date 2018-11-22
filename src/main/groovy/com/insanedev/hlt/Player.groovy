@@ -5,7 +5,6 @@ import groovy.transform.EqualsAndHashCode
 
 import java.util.function.Function
 import java.util.stream.Collectors
-import java.util.stream.IntStream
 import java.util.stream.Stream
 
 @EqualsAndHashCode(includes = "id")
@@ -15,6 +14,7 @@ class Player {
     int halite
     final Map<EntityId, Ship> ships = [:]
     final Map<EntityId, Dropoff> dropoffs = [:]
+    Game game
 
     private Player(final PlayerId id) {
         this.id = id
@@ -97,7 +97,7 @@ class Player {
     }
 
     void executeAbleMoves(List<PossibleMove> first) {
-        Log.log("Executing moves: " + first.collect({it.toString()}).join(", "))
+        Log.log("Executing moves: " + first.collect({ it.toString() }).join(", "))
         first.stream().forEach({ it.executeIfAble() })
     }
 
@@ -123,9 +123,9 @@ class Player {
             List<PossibleMove> chainOfMoves = chainRequiredMoves([], coordinatingMoves, it, it.ship)
             Log.log("Hard move: ${it}")
             if (chainOfMoves) {
-                Log.log("Hard move chain: " + chainOfMoves.collect({it.toString()}).join(", "))
-                chainOfMoves.stream().forEach({coordinatingMoves.remove(it.ship)})
-                return chainOfMoves.stream().map({it.executeMove()})
+                Log.log("Hard move chain: " + chainOfMoves.collect({ it.toString() }).join(", "))
+                chainOfMoves.stream().forEach({ coordinatingMoves.remove(it.ship) })
+                return chainOfMoves.stream().map({ it.executeMove() })
             } else {
                 Log.log("Finding alternate route for ${it.ship.id}")
                 return Stream.of(it.getAlternateRoute().executeMove())
@@ -135,7 +135,7 @@ class Player {
 
     List<PossibleMove> chainRequiredMoves(List<PossibleMove> movesSoFar, Map<Ship, PossibleMove> poolOfMoves, PossibleMove currentMove, Ship startingShip) {
         def blockingShip = currentMove.mapCell.ship
-        boolean blockingShipAlreadySeen = movesSoFar.stream().anyMatch({it.ship == blockingShip})
+        boolean blockingShipAlreadySeen = movesSoFar.stream().anyMatch({ it.ship == blockingShip })
         if (!poolOfMoves.containsKey(blockingShip)) {
             // Reached a dead end
             return []
@@ -158,6 +158,12 @@ class Player {
         Log.log("Active ships:")
         getActiveShips().forEach({
             def cell = it.game.gameMap[it]
-            Log.log("$it $cell") })
+            Log.log("$it $cell")
+        })
+    }
+
+    void setGame(Game game) {
+        this.game = game
+        this.shipyard.game = game
     }
 }

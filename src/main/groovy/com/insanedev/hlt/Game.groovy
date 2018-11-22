@@ -12,5 +12,6 @@ class Game {
         this.players = players
         this.gameMap = map
         myId = me.id
+        this.players.stream().forEach({it.game = this})
     }
 }
