@@ -1,6 +1,7 @@
 package com.insanedev.hlt.engine
 
 import com.insanedev.hlt.Game
+import com.insanedev.hlt.Log
 import com.insanedev.hlt.Position
 
 class MapCellUpdate extends GameUpdate {
@@ -14,6 +15,7 @@ class MapCellUpdate extends GameUpdate {
     }
 
     void apply() {
+        Log.debug("Update map cell at $position to $halite")
         game.gameMap.at(position).halite = halite
     }
 }

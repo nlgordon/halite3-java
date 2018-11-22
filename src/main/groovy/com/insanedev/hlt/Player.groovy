@@ -5,6 +5,7 @@ import groovy.transform.EqualsAndHashCode
 
 import java.util.function.Function
 import java.util.stream.Collectors
+import java.util.stream.IntStream
 import java.util.stream.Stream
 
 @EqualsAndHashCode(includes = "id")
@@ -62,8 +63,8 @@ class Player {
         }
     }
 
-    // TODO: Ships are still colliding somehow...
     List<MoveCommand> navigateShips() {
+        //logActiveShips()
         List<MoveCommand> executedCommands = []
         Tuple2<List<PossibleMove>, List<MoveCommand>> state = new Tuple2<>(collectDesiredMoves(), executedCommands)
         state = executeEasyMoves(state)
@@ -96,6 +97,7 @@ class Player {
     }
 
     void executeAbleMoves(List<PossibleMove> first) {
+        Log.log("Executing moves: " + first.collect({it.toString()}).join(", "))
         first.stream().forEach({ it.executeIfAble() })
     }
 
@@ -119,10 +121,13 @@ class Player {
         return coordinatingMoves.values().collect().stream()
                 .filter({ coordinatingMoves.containsKey(it.ship) }).flatMap({
             List<PossibleMove> chainOfMoves = chainRequiredMoves([], coordinatingMoves, it, it.ship)
+            Log.log("Hard move: ${it}")
             if (chainOfMoves) {
+                Log.log("Hard move chain: " + chainOfMoves.collect({it.toString()}).join(", "))
                 chainOfMoves.stream().forEach({coordinatingMoves.remove(it.ship)})
                 return chainOfMoves.stream().map({it.executeMove()})
             } else {
+                Log.log("Finding alternate route for ${it.ship.id}")
                 return Stream.of(it.getAlternateRoute().executeMove())
             }
         }).collect()
@@ -147,5 +152,12 @@ class Player {
     Map<Ship, PossibleMove> possibleMovesToMapByShip(List<PossibleMove> desiredMoves) {
         return desiredMoves.stream()
                 .collect(Collectors.toMap({ it.ship }, Function.identity()))
+    }
+
+    void logActiveShips() {
+        Log.log("Active ships:")
+        getActiveShips().forEach({
+            def cell = it.game.gameMap[it]
+            Log.log("$it $cell") })
     }
 }

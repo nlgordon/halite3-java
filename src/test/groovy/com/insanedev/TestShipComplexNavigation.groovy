@@ -55,6 +55,28 @@ class TestShipComplexNavigation extends BaseTestFakeGameEngine {
         shipOne.position == destination || shipTwo.position == destination
     }
 
+    def "Two ships, one at 0,0 and one at 1,1 navigating to an occupied 1,0 that is exploring will have only one arrive in 1 turn and none will be destroyed"() {
+        def destination = new Position(1, 0)
+        def shipOne = engine.createShip(0, 0, 0)
+        def shipTwo = engine.createShip(1,1, 0)
+        def shipThree = engine.createShip(1, 0, 0)
+        def haliteLocation = new Position(2, 0)
+        game.gameMap[haliteLocation].halite = 1000
+
+        shipOne.destination = destination
+        shipTwo.destination = destination
+
+        shipThree.destination = haliteLocation
+
+        when:
+        runTurns(1)
+
+        then:
+        shipOne.active
+        shipTwo.active
+        shipOne.position == destination || shipTwo.position == destination
+    }
+
     def "Four ships in a sqaure at 2,2, navigating to each others start point will arrive in 1 turn"() {
         def ship1Start = new Position(2, 3)
         def ship2Start = new Position(3, 3)

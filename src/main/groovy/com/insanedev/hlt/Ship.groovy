@@ -18,6 +18,7 @@ class Ship extends Entity {
     ShipStatus status = ShipStatus.EXPLORING
     int minHarvestAmount = 25
     int fullAmount = Constants.MAX_HALITE
+    Position positionMovingTo
 
     Ship(Game game, final Player player, final EntityId id, final Position position, final int halite) {
         super(player, id, position)
@@ -39,9 +40,14 @@ class Ship extends Entity {
         assertActive()
         if (direction != Direction.STILL) {
             Log.log("Moving $id ${direction} from ${position} ship halite: $halite cell halite: ${game.gameMap[position].halite}")
-            game.gameMap[position].ship = null
+            def cell = game.gameMap[position]
+            if (cell.ship == this) {
+                cell.ship = null
+            }
         }
-        game.gameMap[position.directionalOffset(direction)].ship = this
+
+        positionMovingTo = position.directionalOffset(direction)
+        game.gameMap[positionMovingTo].ship = this
         return Command.move(id, direction)
     }
 
@@ -65,11 +71,11 @@ class Ship extends Entity {
 
     PossibleMove getExplorationMove() {
         def currentCellHalite = game.gameMap[position].halite
-        if (currentCellHalite * 0.25 > minHarvestAmount || !hasHaliteToMove()) {
+        if (currentCellHalite * 0.25 >= minHarvestAmount || !hasHaliteToMove()) {
             return createPossibleMove(Direction.STILL)
         }
         return possibleCardinalMoves()
-                .filter({ it.mapCell.halite >= currentCellHalite })
+                .filter({ it.mapCell.halite > currentCellHalite || currentCellHalite == 0 })
                 .sorted({ PossibleMove left, PossibleMove right -> right.mapCell.halite.compareTo(left.mapCell.halite) })
                 .filter({ it.ableToMove })
                 .findFirst()
@@ -77,10 +83,6 @@ class Ship extends Entity {
     }
 
     PossibleMove getAlternateRoute(Direction direction) {
-        // TODO: WTF is going on here to require this if
-        if (direction == Direction.STILL) {
-            return createPossibleMove(Direction.STILL)
-        }
         def perpendiculars = direction.getPerpendiculars()
         return perpendiculars.stream()
                 .map({ createPossibleMove(it) })
@@ -96,7 +98,7 @@ class Ship extends Entity {
     Direction getNavigationDirection() {
         Direction direction = Direction.STILL
         if (!hasHaliteToMove()) {
-            Log.log("Unable to move $id due to too little halite of $halite for cell ${game.gameMap[position].halite}")
+            Log.debug("Unable to move $id due to too little halite of $halite for cell ${game.gameMap[position].halite}")
             return direction
         }
         if (destination) {
@@ -151,8 +153,18 @@ class Ship extends Entity {
     }
 
     void destroy() {
+        Log.log("Destroyed Ship $id")
         destroyed = true
-        game.gameMap[this].ship = null
+        def cell = game.gameMap[this]
+        if (cell.ship == this) {
+            cell.ship = null
+        }
+        if (positionMovingTo) {
+            cell = game.gameMap[positionMovingTo]
+            if (cell.ship == this) {
+                cell.ship = null
+            }
+        }
     }
 
     boolean isActive() {
@@ -164,7 +176,9 @@ class Ship extends Entity {
     }
 
     void update(Position newPosition, int newHalite) {
-        game.gameMap[position].ship = null
+        if (game.gameMap[position].ship == this) {
+            game.gameMap[position].ship = null
+        }
         game.gameMap[newPosition].ship = this
         this.position = newPosition
         this.halite = newHalite
@@ -179,6 +193,10 @@ class Ship extends Entity {
     Stream<PossibleMove> possibleCardinalMoves() {
         return Direction.ALL_CARDINALS.stream()
                 .map({ createPossibleMove(it) })
+    }
+
+    String toString() {
+        return "id:$id $position halite:$halite"
     }
 }
 
@@ -216,5 +234,9 @@ class PossibleMove {
 
     PossibleMove getAlternateRoute() {
         return ship.getAlternateRoute(direction)
+    }
+
+    String toString() {
+        return "PossibleMove: ${ship.id} ${ship.position} -> $direction $position ${mapCell.ship == null}"
     }
 }

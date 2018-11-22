@@ -26,8 +26,13 @@ class ShipUpdate extends GameUpdate {
         if (ship) {
             ship.update(position, halite)
         } else {
-            ship = player.ships[id] = new Ship(game, player, id, position, halite)
+            Log.debug("Creating ship $id at $position")
+            ship = new Ship(game, player, id, position, halite)
+            player.ships[id] = ship
+            game.gameMap[position].ship = ship
         }
+
+        Log.debug("Map cell for updated ship $id: ${game.gameMap[position]}")
 
         Log.debug("Updating player ${player.id} ship ${ship.id} at ${ship.position.x} ${ship.position.y} with halite ${ship.halite}")
 

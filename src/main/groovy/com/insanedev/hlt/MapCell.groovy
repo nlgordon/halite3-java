@@ -26,4 +26,8 @@ class MapCell {
     void markUnsafe(final Ship ship) {
         this.ship = ship
     }
+
+    String toString() {
+        return "$position $occupied"
+    }
 }

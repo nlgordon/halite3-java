@@ -1,5 +1,10 @@
 package com.insanedev.hlt
 
+import java.util.function.Consumer
+import java.util.function.Function
+import java.util.stream.IntStream
+import java.util.stream.Stream
+
 class GameMap {
     int width
     int height
@@ -91,5 +96,13 @@ class GameMap {
         }
 
         return Direction.STILL
+    }
+
+    void iterateOverCells(Consumer<MapCell> action) {
+        IntStream.range(0, width).forEach({ x ->
+            IntStream.range(0, height).forEach({y ->
+                action.accept(cells[y][x])
+            })
+        })
     }
 }

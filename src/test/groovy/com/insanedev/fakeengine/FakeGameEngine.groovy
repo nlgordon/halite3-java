@@ -27,7 +27,7 @@ class FakeGameEngine implements GameEngine {
 
     @Override
     Game init() {
-        Log.safeOpen(0)
+        Log.safeOpen(3)
         Map<String, String> constants = [
                 "NEW_ENTITY_ENERGY_COST"   : "1000",
                 "DROPOFF_COST"             : "4000",

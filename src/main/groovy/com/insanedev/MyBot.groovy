@@ -37,8 +37,7 @@ class MyBot {
             List<Command> turnCommands = new ArrayList<>()
             turnCommands.addAll(me.navigateShips())
 
-            // TODO: Spawn collisions seem to be happening when ship is navigating in
-            if (game.turnNumber <= Constants.MAX_TURNS / 2 && me.halite >= Constants.SHIP_COST && !gameMap[me.shipyard].occupied) {
+            if (game.turnNumber <= Constants.MAX_TURNS * 0.4 && me.halite >= Constants.SHIP_COST && !gameMap[me.shipyard].occupied) {
                 Log.log("Spawning Ship")
                 turnCommands.add(me.shipyard.spawn())
             }

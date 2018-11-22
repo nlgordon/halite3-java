@@ -219,6 +219,30 @@ class TestShip extends BaseTestFakeGameEngine {
         ship.position == start
     }
 
+    def "When a ship is exploring and the current cell is equal to the minimum amount, it will harvest its current location if this cell is equal to than the surrounding cells"() {
+        engine.updateShipPosition(0, 0, 0)
+        ship.halite = 500
+        def start = new Position(0, 0)
+        gameMap[start].halite = 100
+        gameMap[start.directionalOffset(Direction.EAST)].halite = 100
+        gameMap[start.directionalOffset(Direction.SOUTH)].halite = 100
+        ship.minHarvestAmount = 25
+        when:
+        navigateShips()
+        then:
+        ship.position == start
+    }
+
+    def "When a ship is exploring, the current cell and all surrounding cells have zero halite, it will move to a new cell"() {
+        engine.updateShipPosition(0, 0, 0)
+        ship.halite = 500
+        def start = new Position(0, 0)
+        when:
+        navigateShips()
+        then:
+        ship.position != start
+    }
+
     def "When a ship is exploring and hits its full amount, it will navigate back to the shipyard"() {
         engine.updateShipPosition(0, 0, 0)
         ship.halite = 500
@@ -283,5 +307,24 @@ class TestShip extends BaseTestFakeGameEngine {
         ship.getDesiredMove().direction == Direction.STILL
     }
 
+    def "When executing a move, only remove yourself from the mapcell if you are still the ship of record"() {
+        def ship2 = engine.createShip(0,0,0)
+        game.gameMap[ship].ship = ship2
+        when:
+        ship.move(Direction.EAST)
+        then:
+        game.gameMap[ship].ship == ship2
+    }
 
+    def "If a ship is destroyed as the result of a move, the destination map cell is cleared out"() {
+        def ship2 = engine.createShip(0, 0, 0)
+        engine.updateShipPosition(0, 0, 2)
+        ship.move(Direction.NORTH)
+        ship.destroy()
+        gameMap[new Position(0, 1)].halite = 1000
+        when:
+        navigateShips()
+        then:
+        ship2.position == ship.position.directionalOffset(Direction.NORTH)
+    }
 }

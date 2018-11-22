@@ -23,6 +23,7 @@ dependencies {
 
 task buildZip(type: Zip) {
     from jar
+    rename '.*.jar', 'MyBot.jar'
 }
 
 task wrapper(type: Wrapper) {

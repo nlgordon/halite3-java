@@ -2,8 +2,6 @@ package com.insanedev.hlt
 
 import groovy.transform.Canonical
 
-import java.util.stream.Stream
-
 @Canonical
 class Position {
     final int x
@@ -12,11 +10,6 @@ class Position {
     Position(final int x, final int y) {
         this.x = x
         this.y = y
-    }
-
-    Stream<Tuple2<Direction, Position>> possibleMoves() {
-        return Direction.ALL_CARDINALS.stream()
-                .map({ new Tuple2<Direction, Position>(it, directionalOffset(it)) })
     }
 
     Position directionalOffset(final Direction d) {
@@ -49,5 +42,9 @@ class Position {
         }
 
         return new Position(x + dx, y + dy)
+    }
+
+    String toString() {
+        return "Position: $x,$y"
     }
 }
