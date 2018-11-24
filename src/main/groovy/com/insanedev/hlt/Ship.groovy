@@ -19,6 +19,7 @@ class Ship extends Entity {
     int minHarvestAmount = 25
     int fullAmount = Constants.MAX_HALITE
     Position positionMovingTo
+    List<ShipHistory> history = []
 
     Ship(Game game, final Player player, final EntityId id, final Position position, final int halite) {
         super(player, id, position)
@@ -176,6 +177,23 @@ class Ship extends Entity {
     }
 
     void update(Position newPosition, int newHalite) {
+        ShipHistoryAction type
+        def haliteDelta = 0
+        // Need tests for all types
+        if (newHalite > halite) {
+            haliteDelta = newHalite - halite
+            type = ShipHistoryAction.HARVEST
+        } else if (newHalite == 0 && halite > 0) {
+            haliteDelta = newHalite - halite
+            type = ShipHistoryAction.DROPOFF
+        } else if (newPosition != position) {
+            type = ShipHistoryAction.MOVE
+        } else {
+            type = ShipHistoryAction.STILL
+        }
+
+        history[game.turnNumber] = new ShipHistory(game.turnNumber, newHalite, haliteDelta, newPosition, type)
+
         if (game.gameMap[position].ship == this) {
             game.gameMap[position].ship = null
         }
@@ -238,5 +256,25 @@ class PossibleMove {
 
     String toString() {
         return "PossibleMove: ${ship.id} ${ship.position} -> $direction $position ${mapCell.ship == null}"
+    }
+}
+
+enum ShipHistoryAction {
+    HARVEST, DROPOFF, MOVE, STILL
+}
+
+class ShipHistory {
+    int turn
+    int halite
+    int haliteDelta
+    Position position
+    ShipHistoryAction type
+
+    ShipHistory(int turn, int halite, int haliteDelta, Position position, ShipHistoryAction type) {
+        this.turn = turn
+        this.halite = halite
+        this.haliteDelta = haliteDelta
+        this.position = position
+        this.type = type
     }
 }

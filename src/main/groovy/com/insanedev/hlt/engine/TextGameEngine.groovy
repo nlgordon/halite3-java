@@ -12,10 +12,10 @@ class TextGameEngine implements GameEngine {
 
     @Override
     void endTurn(Collection<Command> commands) {
-        for (Command command : commands) {
-            System.out.print(command.command)
+        commands.stream().filter({it != null}).forEach({
+            System.out.print(it.command)
             System.out.print(' ')
-        }
+        })
         System.out.println()
     }
 

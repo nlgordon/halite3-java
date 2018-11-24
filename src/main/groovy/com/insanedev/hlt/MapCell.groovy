@@ -5,6 +5,7 @@ class MapCell {
     int halite
     Ship ship
     Entity structure
+    Boolean occupiedOverride
 
     MapCell(final Position position, final int halite) {
         this.position = position
@@ -16,8 +17,8 @@ class MapCell {
     }
 
     boolean isOccupied() {
-        if (hasStructure() && structure.player != this?.ship?.player) {
-            return false
+        if (occupiedOverride != null) {
+            return occupiedOverride
         }
         return ship != null
     }

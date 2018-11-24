@@ -166,4 +166,13 @@ class Player {
         this.game = game
         this.shipyard.game = game
     }
+
+    void updateDropoffs() {
+        Stream.concat(Stream.of(shipyard), dropoffs.values().stream()).forEach({
+            def mapCell = game.gameMap[it.position]
+            if (mapCell.ship && mapCell.ship.player != this) {
+                mapCell.occupiedOverride = false
+            }
+        })
+    }
 }

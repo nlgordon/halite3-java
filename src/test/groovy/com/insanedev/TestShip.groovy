@@ -2,7 +2,6 @@ package com.insanedev
 
 import com.insanedev.fakeengine.BaseTestFakeGameEngine
 import com.insanedev.hlt.*
-import spock.lang.Ignore
 import spock.lang.Unroll
 
 class TestShip extends BaseTestFakeGameEngine {
@@ -74,16 +73,6 @@ class TestShip extends BaseTestFakeGameEngine {
 
         where:
         direction << [Direction.STILL] + Direction.ALL_CARDINALS
-    }
-
-    @Ignore
-    def "When a ship at 1,1 is ordered to navigate through a ship that doesn't declare a move at 2,1, it stays still"() {
-        engine.createShip(2, 1, 0)
-        def ship = setupShipForNavigation(0, 2, 1)
-        when:
-        navigateShips()
-        then:
-        ship.position == new Position(1,1)
     }
 
     @Unroll
@@ -258,7 +247,7 @@ class TestShip extends BaseTestFakeGameEngine {
     def "When a navigating ship at 0,0 with 0 halite on board, and 100 halite in the map cell, will desire to stay still"() {
         engine.updateShipPosition(0, 0, 0)
         gameMap[new Position(0, 0)].halite = 100
-        ship.destination = new Position(1,1)
+        ship.destination = new Position(1, 1)
         when:
         def move = ship.getDesiredMove()
         then:
@@ -308,7 +297,7 @@ class TestShip extends BaseTestFakeGameEngine {
     }
 
     def "When executing a move, only remove yourself from the mapcell if you are still the ship of record"() {
-        def ship2 = engine.createShip(0,0,0)
+        def ship2 = engine.createShip(0, 0, 0)
         game.gameMap[ship].ship = ship2
         when:
         ship.move(Direction.EAST)
@@ -327,4 +316,82 @@ class TestShip extends BaseTestFakeGameEngine {
         then:
         ship2.position == ship.position.directionalOffset(Direction.NORTH)
     }
+
+    def "A ship that collects 25 halite from a cell will have a history entry of the harvest"() {
+        engine.updateShipPosition(0, 0, 0)
+        gameMap[ship].halite = 200
+        when:
+        navigateShips()
+        def history = ship.history[2]
+        then:
+        history.type == ShipHistoryAction.HARVEST
+        history.turn == 2
+        history.halite == 50
+        history.haliteDelta == 50
+        history.position == new Position(0, 0)
+    }
+
+    def "A ship that moves one cell east will have a history entry for the new position"() {
+        engine.updateShipPosition(0, 0, 0)
+        def destination = new Position(1, 0)
+        ship.destination = destination
+        when:
+        navigateShips()
+        def history = ship.history[2]
+        then:
+        history.type == ShipHistoryAction.MOVE
+        history.turn == 2
+        history.halite == 0
+        history.haliteDelta == 0
+        history.position == destination
+    }
+
+    def "A ship that moves two cells east and south will have history entries for each position"() {
+        engine.updateShipPosition(0, 0, 0)
+        def destination = new Position(1, 1)
+        ship.destination = destination
+        when:
+        runTurns(2)
+        def history1 = ship.history[2]
+        def history2 = ship.history[3]
+
+        then:
+        history1.type == ShipHistoryAction.MOVE
+        history1.turn == 2
+        history1.position == new Position(1, 0)
+
+        history2.type == ShipHistoryAction.MOVE
+        history2.turn == 3
+        history2.position == new Position(1, 1)
+    }
+
+    def "A ship that makes a dropoff will have a history entry"() {
+        engine.updateShipPosition(0, 1, 0)
+        def destination = new Position(1, 1)
+        ship.destination = destination
+        ship.halite = 100
+        when:
+        runTurns(1)
+        def history1 = ship.history[2]
+
+        then:
+        history1.type == ShipHistoryAction.DROPOFF
+        history1.turn == 2
+        history1.halite == 0
+        history1.haliteDelta == -100
+        history1.position == new Position(1, 1)
+    }
+
+    def "When a ship makes no move, a still entry is recorded in history"() {
+        ship.status = ShipStatus.HOLDING
+        when:
+        runTurns(1)
+        def history1 = ship.history[2]
+
+        then:
+        history1.type == ShipHistoryAction.STILL
+        history1.turn == 2
+        history1.position == new Position(1, 1)
+    }
+
 }

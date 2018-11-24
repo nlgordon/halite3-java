@@ -54,6 +54,7 @@ class FakeGameEngine implements GameEngine {
     @Override
     void updateFrame() {
         turn++
+        game.turnNumber = turn
         List<GameUpdate> updates = []
         List<ShipUpdate> shipUpdates = []
         List<MapCellUpdate> mapCellUpdates = []
