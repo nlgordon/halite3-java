@@ -26,9 +26,9 @@ class TestPlayerStrategy extends BaseTestFakeGameEngine {
 
     def "PlayerStrategy map analysis creates an single area of 3x1 since only 4,5 5,5 and 6,5 have halite"() {
         def position = new Position(5,5)
-        IntStream.rangeClosed(4, 6).forEach({x ->
-            game.gameMap[new Position(x, 5)].halite = 1000
-        })
+        game.gameMap[new Position(4, 5)].halite = 900
+        game.gameMap[new Position(5, 5)].halite = 1000
+        game.gameMap[new Position(6, 5)].halite = 900
         when:
         strategy.analyzeMap()
         then:
@@ -38,9 +38,9 @@ class TestPlayerStrategy extends BaseTestFakeGameEngine {
 
     def "PlayerStrategy map analysis creates an single area of 1x3 since only 5,4 5,5 and 5,6 have halite"() {
         def position = new Position(5,5)
-        IntStream.rangeClosed(4, 6).forEach({y ->
-            game.gameMap[new Position(5, y)].halite = 1000
-        })
+        game.gameMap[new Position(5, 4)].halite = 900
+        game.gameMap[new Position(5, 5)].halite = 1000
+        game.gameMap[new Position(5, 6)].halite = 900
         when:
         strategy.analyzeMap()
         then:

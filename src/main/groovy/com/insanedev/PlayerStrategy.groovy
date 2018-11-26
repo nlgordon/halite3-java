@@ -37,23 +37,22 @@ class PlayerStrategy {
             def position = it.position
             int width = 1
             int height = 1
-            int xOffset = 0
-            int yOffset = 0
 
             List<Position> horizontalPositionsWithHalite = walkXPositions(position)
                     .filter(this.&cellPositionHasHalite).collect()
-            List<Position> verticalPositionsWithHalite = walkYPositions(position)
-                    .filter(this.&cellPositionHasHalite).collect()
-
             if (horizontalPositionsWithHalite.size() != 1) {
                 width = horizontalPositionsWithHalite.size()
-                xOffset = ((width - 1) / 2)
+//                int xOffset = ((width - 1) / 2)
+//                position = position.xOffset(xOffset)
             }
+
+            List<Position> verticalPositionsWithHalite = walkYPositions(position)
+                    .filter(this.&cellPositionHasHalite).collect()
             if (verticalPositionsWithHalite.size() != 1) {
                 height = verticalPositionsWithHalite.size()
-                yOffset = ((height - 1) / 2)
+//                int yOffset = ((height - 1) / 2)
+//                position = position.yOffset(yOffset)
             }
-            position = position.offset(xOffset, yOffset)
             new Area(position, width, height, game)
         })
                 .collect()
@@ -64,13 +63,15 @@ class PlayerStrategy {
     }
 
     Stream<Position> walkYPositions(Position position) {
-        return IntStream.range(position.y, gameMap.height)
-                .mapToObj({ new Position(position.x, it) })
+        return Stream.concat(IntStream.range(position.y, gameMap.height)
+                .mapToObj({ new Position(position.x, it) }), IntStream.rangeClosed(0, position.y - 1)
+                .mapToObj({ new Position(position.x, it) }))
     }
 
     Stream<Position> walkXPositions(Position position) {
-        return IntStream.range(position.x, gameMap.width)
-                .mapToObj({ new Position(it, position.y) })
+        return Stream.concat(IntStream.range(position.x, gameMap.width)
+                .mapToObj({ new Position(it, position.y) }), IntStream.rangeClosed(0, position.x - 1)
+                .mapToObj({ new Position(it, position.y) }))
     }
 
     void ready() {
