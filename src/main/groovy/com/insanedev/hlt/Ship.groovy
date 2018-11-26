@@ -179,7 +179,6 @@ class Ship extends Entity {
     void update(Position newPosition, int newHalite) {
         ShipHistoryAction type
         def haliteDelta = 0
-        // Need tests for all types
         if (newHalite > halite) {
             haliteDelta = newHalite - halite
             type = ShipHistoryAction.HARVEST

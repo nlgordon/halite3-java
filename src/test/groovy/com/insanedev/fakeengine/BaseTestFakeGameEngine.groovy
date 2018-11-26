@@ -11,10 +11,14 @@ class BaseTestFakeGameEngine extends Specification {
     Player player
 
     void initGame(int playerId, int shipyardX, int shipyardY, int mapWidth, int mapHeight) {
-        engine = new FakeGameEngine(Player.create(playerId, shipyardX, shipyardY), mapWidth, mapHeight)
+        createEngine(playerId, shipyardX, shipyardY, mapWidth, mapHeight)
         game = engine.init()
         player = game.me
         engine.updateFrame()
+    }
+
+    FakeGameEngine createEngine(int playerId, int shipyardX, int shipyardY, int mapWidth, int mapHeight) {
+        engine = new FakeGameEngine(Player.create(playerId, shipyardX, shipyardY), mapWidth, mapHeight)
     }
 
     void initGameWithMultiplePlayers(int player1ShipyardX, int player1ShipyardY, int player2ShipyardX, int player2ShipyardY, int mapWidth, int mapHeight) {

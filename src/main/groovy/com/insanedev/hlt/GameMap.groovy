@@ -100,9 +100,13 @@ class GameMap {
 
     void iterateOverCells(Consumer<MapCell> action) {
         IntStream.range(0, width).forEach({ x ->
-            IntStream.range(0, height).forEach({y ->
+            IntStream.range(0, height).forEach({ y ->
                 action.accept(cells[y][x])
             })
         })
+    }
+
+    Stream<MapCell> streamCells() {
+        IntStream.range(0, height).mapToObj({cells[it].collect().stream()}).flatMap(Function.identity())
     }
 }

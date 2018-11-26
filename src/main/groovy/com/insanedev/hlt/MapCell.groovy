@@ -1,11 +1,14 @@
 package com.insanedev.hlt
 
+import com.insanedev.Area
+
 class MapCell {
     final Position position
     int halite
     Ship ship
     Entity structure
     Boolean occupiedOverride
+    Area area
 
     MapCell(final Position position, final int halite) {
         this.position = position
