@@ -4,6 +4,7 @@ import com.insanedev.hlt.*
 import com.insanedev.hlt.engine.GameEngine
 
 import java.util.stream.IntStream
+import java.util.stream.Stream
 
 class PlayerStrategy {
     GameEngine engine
@@ -36,26 +37,40 @@ class PlayerStrategy {
             def position = it.position
             int width = 1
             int height = 1
-            List<Position> horizontalPositionsWithHalite = IntStream.range(position.x, gameMap.width)
-                    .mapToObj({new Position(it, position.y)})
-                    .filter({game.gameMap[it].halite > 0}).collect()
-            List<Position> verticalPositionsWithHalite = IntStream.range(position.y, gameMap.height)
-                    .mapToObj({new Position(position.x, it)})
-                    .filter({game.gameMap[it].halite > 0}).collect()
+            int xOffset = 0
+            int yOffset = 0
+
+            List<Position> horizontalPositionsWithHalite = walkXPositions(position)
+                    .filter(this.&cellPositionHasHalite).collect()
+            List<Position> verticalPositionsWithHalite = walkYPositions(position)
+                    .filter(this.&cellPositionHasHalite).collect()
+
             if (horizontalPositionsWithHalite.size() != 1) {
                 width = horizontalPositionsWithHalite.size()
-                int xOffset = position.x + ((width - 1) / 2)
-                position = new Position(xOffset, position.y)
+                xOffset = ((width - 1) / 2)
             }
             if (verticalPositionsWithHalite.size() != 1) {
                 height = verticalPositionsWithHalite.size()
-                int yOffset = position.y + ((height - 1) / 2)
-                position = new Position(position.x, yOffset)
+                yOffset = ((height - 1) / 2)
             }
+            position = position.offset(xOffset, yOffset)
             new Area(position, width, height, game)
         })
-                .filter({it != null})
                 .collect()
+    }
+
+    boolean cellPositionHasHalite(Position position) {
+        return gameMap[position].halite > 0
+    }
+
+    Stream<Position> walkYPositions(Position position) {
+        return IntStream.range(position.y, gameMap.height)
+                .mapToObj({ new Position(position.x, it) })
+    }
+
+    Stream<Position> walkXPositions(Position position) {
+        return IntStream.range(position.x, gameMap.width)
+                .mapToObj({ new Position(it, position.y) })
     }
 
     void ready() {

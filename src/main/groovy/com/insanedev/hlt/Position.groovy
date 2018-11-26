@@ -41,7 +41,19 @@ class Position {
                 throw new IllegalStateException("Unknown direction " + d)
         }
 
-        return new Position(x + dx, y + dy)
+        return offset(dx, dy)
+    }
+
+    Position xOffset(int x) {
+        return new Position(this.x + x, y)
+    }
+
+    Position yOffset(int y) {
+        return new Position(x, this.y)
+    }
+
+    Position offset(int x, int y) {
+        return new Position(this.x + x, this.y + y)
     }
 
     String toString() {
