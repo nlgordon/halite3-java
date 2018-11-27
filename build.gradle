@@ -1,6 +1,7 @@
 
 plugins {
 	id 'groovy'
+	id "io.spring.dependency-management" version "1.0.6.RELEASE"
 }
 
 jar {
@@ -16,8 +17,15 @@ repositories {
 	jcenter()
 }
 
+dependencyManagement {
+    imports {
+        mavenBom "io.projectreactor:reactor-bom:Bismuth-RELEASE"
+    }
+}
+
 dependencies {
-	compile 'org.codehaus.groovy:groovy-all:2.5.3'
+    compile 'io.projectreactor:reactor-core'
+    compile 'org.codehaus.groovy:groovy-all:2.5.3'
     testCompile 'org.spockframework:spock-core:1.2-groovy-2.5'
 }
 

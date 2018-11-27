@@ -36,6 +36,31 @@ class TestPlayerStrategy extends BaseTestFakeGameEngine {
         assertAreaMatches(strategy.areas[0], 3, 1, position)
     }
 
+    def "PlayerStrategy map analysis creates an single area of 3x1 that wraps around from left to right"() {
+        def position = new Position(0,5)
+        game.gameMap[new Position(-1, 5)].halite = 900
+        game.gameMap[new Position(0, 5)].halite = 1000
+        game.gameMap[new Position(1, 5)].halite = 900
+        when:
+        strategy.analyzeMap()
+        then:
+        strategy.areas.size() == 1
+        assertAreaMatches(strategy.areas[0], 3, 1, position)
+    }
+
+    def "PlayerStrategy map analysis creates an single area of 3x1 since only 4,5 5,5 and 6,5 have halite above 50% of 5,5"() {
+        def position = new Position(5,5)
+        game.gameMap[new Position(3, 5)].halite = 100
+        game.gameMap[new Position(4, 5)].halite = 900
+        game.gameMap[new Position(5, 5)].halite = 1000
+        game.gameMap[new Position(6, 5)].halite = 900
+        game.gameMap[new Position(7, 5)].halite = 100
+        when:
+        strategy.analyzeMap()
+        then:
+        assertAreaMatches(strategy.areas[0], 3, 1, position)
+    }
+
     def "PlayerStrategy map analysis creates an single area of 1x3 since only 5,4 5,5 and 5,6 have halite"() {
         def position = new Position(5,5)
         game.gameMap[new Position(5, 4)].halite = 900
@@ -45,6 +70,31 @@ class TestPlayerStrategy extends BaseTestFakeGameEngine {
         strategy.analyzeMap()
         then:
         strategy.areas.size() == 1
+        assertAreaMatches(strategy.areas[0], 1, 3, position)
+    }
+
+    def "PlayerStrategy map analysis creates an single area of 1x3 that wraps around from top to bottom"() {
+        def position = new Position(5,0)
+        game.gameMap[new Position(5, -1)].halite = 900
+        game.gameMap[new Position(5, 0)].halite = 1000
+        game.gameMap[new Position(5, 1)].halite = 900
+        when:
+        strategy.analyzeMap()
+        then:
+        strategy.areas.size() == 1
+        assertAreaMatches(strategy.areas[0], 1, 3, position)
+    }
+
+    def "PlayerStrategy map analysis creates an single area of 1x3 since only 5,4 5,5 and 5,6 have halite greater than 50% of 5,5"() {
+        def position = new Position(5,5)
+        game.gameMap[new Position(5, 3)].halite = 100
+        game.gameMap[new Position(5, 4)].halite = 900
+        game.gameMap[new Position(5, 5)].halite = 1000
+        game.gameMap[new Position(5, 6)].halite = 900
+        game.gameMap[new Position(5, 7)].halite = 100
+        when:
+        strategy.analyzeMap()
+        then:
         assertAreaMatches(strategy.areas[0], 1, 3, position)
     }
 

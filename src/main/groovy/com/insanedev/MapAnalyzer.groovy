@@ -1,0 +1,71 @@
+package com.insanedev
+
+import com.insanedev.hlt.Game
+import com.insanedev.hlt.GameMap
+import com.insanedev.hlt.MapCell
+import com.insanedev.hlt.Position
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
+
+class MapAnalyzer {
+    public static final int AREA_SEARCH_DISTANCE = 16
+    public static final BigDecimal AREA_MINIMUM_SCALE = 0.5
+    GameMap map
+    Game game
+
+    MapAnalyzer(Game game) {
+        this.game = game
+        this.map = game.gameMap
+    }
+
+    List<Area> generateAreas() {
+        return Flux.fromStream(map.streamCells())
+                .filter({ it.halite > 0 })
+                .sort({ MapCell left, MapCell right -> right.halite <=> left.halite })
+                .filter({ it.area == null })
+                .flatMap({
+            def position = it.position
+            def width = getAreaWidth(position)
+            def height = getAreaHeight(position)
+            Mono.zip(width, height).map({new Area(position, (int)it.t1, (int)it.t2, game)})
+        }).collectList().block()
+    }
+
+    Mono<Long> getAreaWidth(Position position) {
+        int minHalite = getMinHaliteForArea(position)
+        int searchDistance = map.width / AREA_SEARCH_DISTANCE
+
+        return getAreaDimension(position.x, searchDistance, { int x -> new Position(x, position.y) }, minHalite)
+    }
+
+    Mono<Long> getAreaHeight(Position position) {
+        int minHalite = getMinHaliteForArea(position)
+        int searchDistance = map.width / AREA_SEARCH_DISTANCE
+
+        return getAreaDimension(position.y, searchDistance, { int y -> new Position(position.x, y) }, minHalite)
+    }
+
+    BigDecimal getMinHaliteForArea(Position position) {
+        return map[position].halite * AREA_MINIMUM_SCALE
+    }
+
+    Mono<Long> getAreaDimension(int start, int maxDistance, Closure<Position> positionMapping, int minHalite) {
+        Flux<Position> rightPositions = Flux.range(start + 1, maxDistance).map(positionMapping)
+        Flux<Position> leftPositions = Flux.range(start - maxDistance, maxDistance).sort(Collections.reverseOrder()).map(positionMapping)
+
+        return getDimension(rightPositions, leftPositions, minHalite)
+    }
+
+    Mono<Long> getDimension(Flux<Position> firstPositions, Flux<Position> oppositePositions, int minimumHaliteForArea) {
+        Mono<Long> first = countCellsForArea(firstPositions, minimumHaliteForArea)
+        Mono<Long> opposite = countCellsForArea(oppositePositions, minimumHaliteForArea)
+
+        return Mono.zip(first, opposite).map({1 + Math.min(it.t1, it.t2) * 2})
+    }
+
+    Mono<Long> countCellsForArea(Flux<Position> positions, int minimumHaliteForArea) {
+        return positions
+                .takeWhile({ map[it].halite > minimumHaliteForArea })
+                .count()
+    }
+}
