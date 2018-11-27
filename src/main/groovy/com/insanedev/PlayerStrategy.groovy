@@ -45,7 +45,7 @@ class PlayerStrategy {
          *  Build ships
          *  Create target zone
          *  Create dropoff
-         *  Bring all ships home when game.turnNumber + ships + movements == Constans.MAX_TURNS
+         *  Bring all ships home when game.turnNumber + ships + movements == Constants.MAX_TURNS
          *  Attack other player
          * Calculate Player Commands
          * Calculate Ship Wants

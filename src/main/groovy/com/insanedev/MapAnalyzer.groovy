@@ -12,10 +12,12 @@ class MapAnalyzer {
     public static final BigDecimal AREA_MINIMUM_SCALE = 0.5
     GameMap map
     Game game
+    private int searchDistance
 
     MapAnalyzer(Game game) {
         this.game = game
         this.map = game.gameMap
+        searchDistance = map.width / AREA_SEARCH_DISTANCE
     }
 
     List<Area> generateAreas() {
@@ -25,27 +27,22 @@ class MapAnalyzer {
                 .filter({ it.area == null })
                 .flatMap({
             def position = it.position
-            def width = getAreaWidth(position)
-            def height = getAreaHeight(position)
+            def minHaliteForArea = getMinHaliteForArea(position)
+            def width = getAreaWidth(position, minHaliteForArea)
+            def height = getAreaHeight(position, minHaliteForArea)
             Mono.zip(width, height).map({new Area(position, (int)it.t1, (int)it.t2, game)})
         }).collectList().block()
     }
 
-    Mono<Long> getAreaWidth(Position position) {
-        int minHalite = getMinHaliteForArea(position)
-        int searchDistance = map.width / AREA_SEARCH_DISTANCE
-
+    Mono<Long> getAreaWidth(Position position, int minHalite) {
         return getAreaDimension(position.x, searchDistance, { int x -> new Position(x, position.y) }, minHalite)
     }
 
-    Mono<Long> getAreaHeight(Position position) {
-        int minHalite = getMinHaliteForArea(position)
-        int searchDistance = map.width / AREA_SEARCH_DISTANCE
-
+    Mono<Long> getAreaHeight(Position position, int minHalite) {
         return getAreaDimension(position.y, searchDistance, { int y -> new Position(position.x, y) }, minHalite)
     }
 
-    BigDecimal getMinHaliteForArea(Position position) {
+    int getMinHaliteForArea(Position position) {
         return map[position].halite * AREA_MINIMUM_SCALE
     }
 
