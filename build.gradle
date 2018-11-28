@@ -25,6 +25,7 @@ dependencyManagement {
 
 dependencies {
     compile 'io.projectreactor:reactor-core'
+    compile 'io.projectreactor.addons:reactor-extra'
     compile 'org.codehaus.groovy:groovy-all:2.5.3'
     testCompile 'org.spockframework:spock-core:1.2-groovy-2.5'
 }

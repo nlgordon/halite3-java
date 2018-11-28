@@ -6,9 +6,10 @@ import com.insanedev.hlt.MapCell
 import com.insanedev.hlt.Position
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.math.MathFlux
 
 class MapAnalyzer {
-    public static final int AREA_SEARCH_DISTANCE = 16
+    public static final int AREA_SEARCH_DISTANCE_RATIO = 16
     public static final BigDecimal AREA_MINIMUM_SCALE = 0.5
     GameMap map
     Game game
@@ -17,12 +18,13 @@ class MapAnalyzer {
     MapAnalyzer(Game game) {
         this.game = game
         this.map = game.gameMap
-        searchDistance = map.width / AREA_SEARCH_DISTANCE
+        searchDistance = map.width / AREA_SEARCH_DISTANCE_RATIO
     }
 
     List<Area> generateAreas() {
+        int averageHaliteInCells = getAverageHalitePerCell()
         return Flux.fromStream(map.streamCells())
-                .filter({ it.halite > 0 })
+                .filter({ it.halite > averageHaliteInCells })
                 .sort({ MapCell left, MapCell right -> right.halite <=> left.halite })
                 .filter({ it.area == null })
                 .flatMap({
@@ -32,6 +34,10 @@ class MapAnalyzer {
             def height = getAreaHeight(position, minHaliteForArea)
             Mono.zip(width, height).map({new Area(position, (int)it.t1, (int)it.t2, game)})
         }).collectList().block()
+    }
+
+    double getAverageHalitePerCell() {
+        return MathFlux.averageDouble(Flux.fromStream(map.streamCells()).map({ it.halite })).block()
     }
 
     Mono<Long> getAreaWidth(Position position, int minHalite) {

@@ -3,7 +3,6 @@ package com.insanedev
 import com.insanedev.hlt.*
 import com.insanedev.hlt.engine.GameEngine
 import reactor.core.publisher.Flux
-import reactor.util.Loggers
 
 class PlayerStrategy {
     GameEngine engine
@@ -61,7 +60,7 @@ class PlayerStrategy {
     void handleFrame() {
         engine.updateFrame()
         me.updateDropoffs()
-//        assignAttackShips()
+        assignAttackShips()
 
         /* Phases of Turn Loop
          *
@@ -95,5 +94,54 @@ class PlayerStrategy {
 
     boolean shouldSpawnShip() {
         return game.turnNumber <= Constants.MAX_TURNS * 0.4 && me.halite >= Constants.SHIP_COST && !gameMap[me.shipyard].occupied
+    }
+
+    InfluenceVector getExplorationInflucence(Position position) {
+        def area = areas[0]
+        int dx = area.center.x - position.x
+        int dy = area.center.y - position.y
+        return new InfluenceVector(dx * 90, dy * 90)
+    }
+}
+
+class InfluenceVector {
+    int x = 0
+    int y = 0
+
+    InfluenceVector(int x, int y) {
+        this.x = x
+        this.y = y
+    }
+
+    int appliedToDirection(Direction dir) {
+        if (dir == Direction.NORTH) {
+            return this.y
+        } else if (dir == Direction.SOUTH) {
+            return -this.y
+        } else if (dir == Direction.EAST) {
+            return this.x
+        } else if (dir == Direction.WEST) {
+            return -this.x
+        }
+        return 0
+    }
+
+    Direction getDirection() {
+        int absX = Math.abs(x)
+        int absY = Math.abs(y)
+
+        if (absY > absX) {
+            if (y > 0) {
+                return Direction.SOUTH
+            } else {
+                return Direction.NORTH
+            }
+        } else if (absX > absY) {
+            if (x > 0) {
+                return Direction.EAST
+            } else {
+                return Direction.WEST
+            }
+        }
     }
 }
