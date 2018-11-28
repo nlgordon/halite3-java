@@ -231,6 +231,8 @@ class TestPlayerStrategy extends BaseTestFakeGameEngine {
         11 | 10 | 0   | Direction.SOUTH
     }
 
+    //TODO: Next test is to handle two areas combining into a single result vector
+
     void assertAreaMatches(Area area, int width, int height, Position position) {
         assert area.width == width
         assert area.height == height

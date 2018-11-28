@@ -98,9 +98,13 @@ class PlayerStrategy {
 
     InfluenceVector getExplorationInflucence(Position position) {
         def area = areas[0]
+        int halite = area.halite
         int dx = area.center.x - position.x
         int dy = area.center.y - position.y
-        return new InfluenceVector(dx * 90, dy * 90)
+
+        int xHaliteInfluence = dx * halite * 0.9
+        int yHaliteInfluence = dy * halite * 0.9
+        return new InfluenceVector(xHaliteInfluence, yHaliteInfluence)
     }
 }
 
