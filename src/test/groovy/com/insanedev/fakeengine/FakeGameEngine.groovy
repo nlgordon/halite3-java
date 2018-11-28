@@ -201,8 +201,12 @@ class FakeGameEngine implements GameEngine {
         return players[playerId].ships[new ShipUpdate(game, new EntityId(maxShipId++), new Position(x, y), halite).apply(players[playerId])]
     }
 
+    void updateShipPosition(Ship ship, Position position) {
+        ship.update(position, ship.halite)
+    }
+
     void updateShipPosition(int shipId, int x, int y) {
         Ship ship = me.ships[new EntityId(shipId)]
-        ship.update(new Position(x, y), ship.halite)
+        updateShipPosition(ship, new Position(x, y))
     }
 }

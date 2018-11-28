@@ -172,6 +172,8 @@ class Player {
             def mapCell = game.gameMap[it.position]
             if (mapCell.ship && mapCell.ship.player != this) {
                 mapCell.occupiedOverride = false
+            } else {
+                mapCell.occupiedOverride = null
             }
         })
     }

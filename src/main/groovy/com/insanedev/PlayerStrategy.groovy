@@ -2,6 +2,8 @@ package com.insanedev
 
 import com.insanedev.hlt.*
 import com.insanedev.hlt.engine.GameEngine
+import reactor.core.publisher.Flux
+import reactor.util.Loggers
 
 class PlayerStrategy {
     GameEngine engine
@@ -9,6 +11,7 @@ class PlayerStrategy {
     Player me
     GameMap gameMap
     List<Area> areas = []
+    List<Ship> attackShips = []
 
     PlayerStrategy(GameEngine engine) {
         this.engine = engine
@@ -35,9 +38,30 @@ class PlayerStrategy {
         Log.log("Successfully created bot! My Player ID is " + game.myId)
     }
 
+    // TODO: Not Tested
+    void assignAttackShips() {
+        Flux.fromIterable(game.players)
+                .filter({it != me})
+                .filter({ !Flux.fromIterable(attackShips).filter({Ship ship -> ship.destination == it.shipyard.position}).blockFirst() })
+                .subscribe({
+            Log.log("Need to attack $it.id")
+            Ship ship = Flux.fromIterable(me.ships.values()).filter({!it.destination}).blockFirst()
+            if (ship) {
+                Log.log("Assigning $ship.id to attack player $it.id at $it.shipyard.position")
+                ship.destination = it.shipyard.position
+                attackShips.add(ship)
+            }
+        })
+
+        Flux.fromIterable(attackShips)
+                .filter({it.position == it.destination && it.status != ShipStatus.HOLDING})
+                .subscribe({it.status = ShipStatus.HOLDING})
+    }
+
     void handleFrame() {
         engine.updateFrame()
         me.updateDropoffs()
+//        assignAttackShips()
 
         /* Phases of Turn Loop
          *
