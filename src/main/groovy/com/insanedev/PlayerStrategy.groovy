@@ -97,14 +97,31 @@ class PlayerStrategy {
     }
 
     InfluenceVector getExplorationInflucence(Position position) {
+        if (areas.size() == 2) {
+            def vector = Flux.fromIterable(areas)
+                    .map({getVectorForSingleAreaAndPosition(it, position)})
+                    .reduce(new InfluenceVector(0, 0), {InfluenceVector accumulator, InfluenceVector addition ->
+                accumulator.add(addition)
+            }).block()
+            return vector
+        }
         def area = areas[0]
+        InfluenceVector influenceVector = getVectorForSingleAreaAndPosition(area, position)
+
+        return influenceVector
+    }
+
+    InfluenceVector getVectorForSingleAreaAndPosition(Area area, Position position) {
         int halite = area.halite
         int dx = area.center.x - position.x
         int dy = area.center.y - position.y
 
         int xHaliteInfluence = dx * halite * 0.9
         int yHaliteInfluence = dy * halite * 0.9
-        return new InfluenceVector(xHaliteInfluence, yHaliteInfluence)
+//        int xHaliteInfluence = dx != 0 ? halite * Math.pow(0.9, Math.abs(dx)) * Math.copySign(1, dx) : 0
+//        int yHaliteInfluence = dy != 0 ? halite * Math.pow(0.9, Math.abs(dy)) * Math.copySign(1, dy) : 0
+        def influenceVector = new InfluenceVector(xHaliteInfluence, yHaliteInfluence)
+        return influenceVector
     }
 }
 
@@ -140,12 +157,16 @@ class InfluenceVector {
             } else {
                 return Direction.NORTH
             }
-        } else if (absX > absY) {
+        } else {
             if (x > 0) {
                 return Direction.EAST
             } else {
                 return Direction.WEST
             }
         }
+    }
+
+    InfluenceVector add(InfluenceVector other) {
+        return new InfluenceVector(this.x + other.x, this.y + other.y)
     }
 }

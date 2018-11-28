@@ -231,7 +231,45 @@ class TestPlayerStrategy extends BaseTestFakeGameEngine {
         11 | 10 | 0   | Direction.SOUTH
     }
 
-    //TODO: Next test is to handle two areas combining into a single result vector
+    @Unroll
+    def "Given an area at 12,10 and 8,10 of 1x1 and a ship exploring at #x,#y, an area influence vector will be generated with cell influence of #i in direction #dir due to the area influence"() {
+        def position = new Position(x, y)
+        def areaPosition1 = new Position(12, 10)
+        strategy.areas.add(new Area(areaPosition1, 1, 1, game))
+        game.gameMap[areaPosition1].halite = 100
+        def areaPosition2 = new Position(8, 10)
+        strategy.areas.add(new Area(areaPosition2, 1, 1, game))
+        game.gameMap[areaPosition2].halite = 100
+        def influcence = strategy.getExplorationInflucence(position)
+        expect:
+        influcence.appliedToDirection(dir) == i
+
+        where:
+        x  | y  | i   | dir
+        10 | 10 | 0   | Direction.NORTH
+        10 | 10 | 0   | Direction.SOUTH
+        10 | 10 | 0   | Direction.EAST
+        10 | 10 | 0   | Direction.WEST
+        11 | 10 | 10  | Direction.EAST
+
+//        10 | 9  | -90 | Direction.SOUTH
+//        10 | 9  | 90  | Direction.NORTH
+//        10 | 9  | 0   | Direction.EAST
+//        10 | 9  | 0   | Direction.WEST
+//        10 | 11 | -90 | Direction.NORTH
+//        10 | 11 | 0   | Direction.EAST
+//        10 | 11 | 90  | Direction.SOUTH
+//        10 | 11 | 0   | Direction.WEST
+//        9  | 10 | 90  | Direction.EAST
+//        9  | 10 | -90 | Direction.WEST
+//        9  | 10 | 0   | Direction.NORTH
+//        9  | 10 | 0   | Direction.SOUTH
+//        11 | 10 | 90  | Direction.WEST
+//        11 | 10 | -90 | Direction.EAST
+//        11 | 10 | 0   | Direction.NORTH
+//        11 | 10 | 0   | Direction.SOUTH
+    }
+
 
     void assertAreaMatches(Area area, int width, int height, Position position) {
         assert area.width == width
