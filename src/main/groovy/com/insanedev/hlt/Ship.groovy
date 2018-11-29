@@ -1,6 +1,6 @@
 package com.insanedev.hlt
 
-
+import com.insanedev.InfluenceVector
 import groovy.transform.EqualsAndHashCode
 
 import java.util.stream.Stream
@@ -57,28 +57,34 @@ class Ship extends Entity {
         this.status = ShipStatus.NAVIGATING
     }
 
-    PossibleMove getDesiredMove() {
+    PossibleMove getDesiredMove(InfluenceVector influence) {
         assertActive()
         PossibleMove desiredMove
         if (status == ShipStatus.NAVIGATING) {
             desiredMove = getDesiredNavigationMove()
         } else if (status == ShipStatus.EXPLORING) {
-            desiredMove = getExplorationMove()
+            desiredMove = getExplorationMove(influence)
         } else {
             desiredMove = createPossibleMove(Direction.STILL)
         }
         return desiredMove
     }
 
-    PossibleMove getExplorationMove() {
+    PossibleMove getDesiredMove() {
+        return getDesiredMove(InfluenceVector.ZERO)
+    }
+
+    PossibleMove getExplorationMove(InfluenceVector influence) {
         def currentCellHalite = game.gameMap[position].halite
         if (currentCellHalite * 0.25 >= minHarvestAmount || !hasHaliteToMove()) {
             return createPossibleMove(Direction.STILL)
         }
         return possibleCardinalMoves()
-                .filter({ it.mapCell.halite > currentCellHalite || currentCellHalite == 0 })
-                .sorted({ PossibleMove left, PossibleMove right -> right.mapCell.halite.compareTo(left.mapCell.halite) })
-                .filter({ it.ableToMove })
+                .map({it.influence = influence; it})
+                .filter({
+            it.halite > currentCellHalite || currentCellHalite == 0 })
+                .sorted({ PossibleMove left, PossibleMove right -> right.halite.compareTo(left.halite) })
+                .filter({ it.ableToMoveOrNavigating })
                 .findFirst()
                 .orElse(createPossibleMove(Direction.STILL))
     }
@@ -223,16 +229,22 @@ class PossibleMove {
     MapCell mapCell
     Ship ship
     MoveCommand command
+    InfluenceVector influence
 
-    PossibleMove(Direction direction, Position position, MapCell mapCell, Ship ship) {
+    PossibleMove(Direction direction, Position position, MapCell mapCell, Ship ship, InfluenceVector influence = InfluenceVector.ZERO) {
         this.direction = direction
         this.position = position
         this.mapCell = mapCell
         this.ship = ship
+        this.influence = influence
     }
 
     boolean isAbleToMove() {
         return !mapCell.occupied || mapCell.ship == ship
+    }
+
+    boolean isAbleToMoveOrNavigating() {
+        return ableToMove || mapCell.ship.status == ShipStatus.NAVIGATING
     }
 
     void executeIfAble() {
@@ -251,6 +263,13 @@ class PossibleMove {
 
     PossibleMove getAlternateRoute() {
         return ship.getAlternateRoute(direction)
+    }
+
+    int getHalite() {
+        if (ship.game.gameMap[ship.position].area) {
+            return mapCell.halite
+        }
+        return mapCell.halite + influence.appliedToDirection(direction)
     }
 
     String toString() {

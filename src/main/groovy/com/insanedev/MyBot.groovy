@@ -10,6 +10,7 @@ class MyBot {
         GameEngine gameEngine = new TextGameEngine()
         PlayerStrategy playerStrategy = new PlayerStrategy(gameEngine)
         playerStrategy.init()
+        playerStrategy.analyzeMap()
         playerStrategy.ready()
 
 //        Log.enableDebugging()

@@ -2,9 +2,18 @@ package com.insanedev
 
 import com.insanedev.hlt.*
 import com.insanedev.hlt.engine.GameEngine
+import groovy.transform.Canonical
 import reactor.core.publisher.Flux
 
-class PlayerStrategy {
+import java.time.LocalTime
+import java.time.temporal.ChronoUnit
+
+interface PlayerStrategyInterface {
+
+    InfluenceVector getExplorationInfluence(Position position)
+}
+
+class PlayerStrategy implements PlayerStrategyInterface {
     GameEngine engine
     Game game
     Player me
@@ -17,19 +26,28 @@ class PlayerStrategy {
     }
 
     Game init() {
+        def start = LocalTime.now()
         game = engine.init()
         me = game.me
+        me.strategy = this
         gameMap = game.gameMap
         // At this point "game" variable is populated with initial map data.
         // This is a good place to do computationally expensive start-up pre-processing.
         // As soon as you call "ready" function below, the 2 second per turn timer will start.
 
+        def duration = ChronoUnit.MILLIS.between(start, LocalTime.now())
+        Log.log("Init duration: $duration")
         return game
     }
 
     void analyzeMap() {
+        def start = LocalTime.now()
         MapAnalyzer analyzer = new MapAnalyzer(game)
         areas = analyzer.generateAreas()
+
+        Flux.fromIterable(areas).subscribe({ Log.log("Area: $it.center $it.width:$it.height $it.averageHalite") })
+        def duration = ChronoUnit.MILLIS.between(start, LocalTime.now())
+        Log.log("Map analysis duration: $duration")
     }
 
     void ready() {
@@ -40,11 +58,13 @@ class PlayerStrategy {
     // TODO: Not Tested
     void assignAttackShips() {
         Flux.fromIterable(game.players)
-                .filter({it != me})
-                .filter({ !Flux.fromIterable(attackShips).filter({Ship ship -> ship.destination == it.shipyard.position}).blockFirst() })
+                .filter({ it != me })
+                .filter({
+            !Flux.fromIterable(attackShips).filter({ Ship ship -> ship.destination == it.shipyard.position }).blockFirst()
+        })
                 .subscribe({
             Log.log("Need to attack $it.id")
-            Ship ship = Flux.fromIterable(me.ships.values()).filter({!it.destination}).blockFirst()
+            Ship ship = Flux.fromIterable(me.ships.values()).filter({ !it.destination }).blockFirst()
             if (ship) {
                 Log.log("Assigning $ship.id to attack player $it.id at $it.shipyard.position")
                 ship.destination = it.shipyard.position
@@ -53,11 +73,12 @@ class PlayerStrategy {
         })
 
         Flux.fromIterable(attackShips)
-                .filter({it.position == it.destination && it.status != ShipStatus.HOLDING})
-                .subscribe({it.status = ShipStatus.HOLDING})
+                .filter({ it.position == it.destination && it.status != ShipStatus.HOLDING })
+                .subscribe({ it.status = ShipStatus.HOLDING })
     }
 
     void handleFrame() {
+        def start = LocalTime.now()
         engine.updateFrame()
         me.updateDropoffs()
         assignAttackShips()
@@ -84,6 +105,8 @@ class PlayerStrategy {
         }
 
         engine.endTurn(turnCommands)
+        def duration = ChronoUnit.MILLIS.between(start, LocalTime.now())
+        Log.log("Turn duration: $duration")
     }
 
     Command spawnShip() {
@@ -93,52 +116,52 @@ class PlayerStrategy {
     }
 
     boolean shouldSpawnShip() {
-        return game.turnNumber <= Constants.MAX_TURNS * 0.4 && me.halite >= Constants.SHIP_COST && !gameMap[me.shipyard].occupied
+        return game.turnNumber <= Constants.MAX_TURNS * Configurables.TURNS_TO_MAKE_SHIPS && me.halite >= Constants.SHIP_COST && !gameMap[me.shipyard].occupied
     }
 
-    InfluenceVector getExplorationInflucence(Position position) {
-        if (areas.size() == 2) {
-            def vector = Flux.fromIterable(areas)
-                    .map({getVectorForSingleAreaAndPosition(it, position)})
-                    .reduce(new InfluenceVector(0, 0), {InfluenceVector accumulator, InfluenceVector addition ->
-                accumulator.add(addition)
-            }).block()
-            return vector
-        }
-        def area = areas[0]
-        InfluenceVector influenceVector = getVectorForSingleAreaAndPosition(area, position)
-
-        return influenceVector
+    @Override
+    InfluenceVector getExplorationInfluence(Position position) {
+        return Flux.fromIterable(areas)
+                .filter({it.averageHalite > Configurables.MIN_HALITE_FOR_AREA_CONSIDERATION })
+                .map({ getVectorForSingleAreaAndPosition(it, position) })
+                .reduce(new InfluenceVector(0, 0), { InfluenceVector accumulator, InfluenceVector addition ->
+            accumulator.add(addition)
+        })
+                .defaultIfEmpty(InfluenceVector.ZERO)
+                .block()
     }
 
     InfluenceVector getVectorForSingleAreaAndPosition(Area area, Position position) {
-        int halite = area.halite
+        int halite = area.averageHalite
         int dx = area.center.x - position.x
         int dy = area.center.y - position.y
 
-        int xHaliteInfluence = dx * halite * 0.9
-        int yHaliteInfluence = dy * halite * 0.9
-//        int xHaliteInfluence = dx != 0 ? halite * Math.pow(0.9, Math.abs(dx)) * Math.copySign(1, dx) : 0
-//        int yHaliteInfluence = dy != 0 ? halite * Math.pow(0.9, Math.abs(dy)) * Math.copySign(1, dy) : 0
+        def magnitude = Math.sqrt(dx * dx + dy * dy)
+        def haliteScaling = Math.pow(Configurables.INFLUENCE_DECAY_RATE, magnitude) * halite / magnitude
+        int xHaliteInfluence = dx * haliteScaling
+        int yHaliteInfluence = dy * haliteScaling
         def influenceVector = new InfluenceVector(xHaliteInfluence, yHaliteInfluence)
         return influenceVector
     }
 }
 
+@Canonical
 class InfluenceVector {
-    int x = 0
-    int y = 0
+    static final InfluenceVector ZERO = new InfluenceVector(0, 0)
 
-    InfluenceVector(int x, int y) {
+    final int x
+    final int y
+
+    InfluenceVector(final int x, final int y) {
         this.x = x
         this.y = y
     }
 
     int appliedToDirection(Direction dir) {
         if (dir == Direction.NORTH) {
-            return this.y
-        } else if (dir == Direction.SOUTH) {
             return -this.y
+        } else if (dir == Direction.SOUTH) {
+            return this.y
         } else if (dir == Direction.EAST) {
             return this.x
         } else if (dir == Direction.WEST) {

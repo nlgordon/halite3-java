@@ -58,4 +58,8 @@ class Area {
     int getHalite() {
         return getCells().mapToInt({it.halite}).sum()
     }
+
+    BigDecimal getAverageHalite() {
+        return getCells().mapToInt({it.halite}).average().orElse(0)
+    }
 }

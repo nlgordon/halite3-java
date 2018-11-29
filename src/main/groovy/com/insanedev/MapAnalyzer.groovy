@@ -9,8 +9,6 @@ import reactor.core.publisher.Mono
 import reactor.math.MathFlux
 
 class MapAnalyzer {
-    public static final int AREA_SEARCH_DISTANCE_RATIO = 16
-    public static final BigDecimal AREA_MINIMUM_SCALE = 0.5
     GameMap map
     Game game
     private int searchDistance
@@ -18,13 +16,13 @@ class MapAnalyzer {
     MapAnalyzer(Game game) {
         this.game = game
         this.map = game.gameMap
-        searchDistance = map.width / AREA_SEARCH_DISTANCE_RATIO
+        searchDistance = map.width / Configurables.AREA_SEARCH_DISTANCE_RATIO
     }
 
     List<Area> generateAreas() {
         int averageHaliteInCells = getAverageHalitePerCell()
         return Flux.fromStream(map.streamCells())
-                .filter({ it.halite > averageHaliteInCells })
+                .filter({ it.halite > averageHaliteInCells * Configurables.AREA_AVERAGE_MULTIPLIER })
                 .sort({ MapCell left, MapCell right -> right.halite <=> left.halite })
                 .filter({ it.area == null })
                 .flatMap({
@@ -49,7 +47,7 @@ class MapAnalyzer {
     }
 
     int getMinHaliteForArea(Position position) {
-        return map[position].halite * AREA_MINIMUM_SCALE
+        return map[position].halite * Configurables.AREA_MINIMUM_SCALE
     }
 
     Mono<Long> getAreaDimension(int start, int maxDistance, Closure<Position> positionMapping, int minHalite) {

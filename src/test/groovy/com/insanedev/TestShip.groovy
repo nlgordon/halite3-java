@@ -244,6 +244,50 @@ class TestShip extends BaseTestFakeGameEngine {
         ship.destination == player.shipyard.position
     }
 
+    def "When a ship is exploring, and an area influence of 1000 east, it will move east even if the current cell has 900"() {
+        def strategy = Mock(PlayerStrategyInterface)
+        strategy.getExplorationInfluence(_) >> new InfluenceVector(1000, 0)
+        player.strategy = strategy
+        engine.updateShipPosition(0, 0, 0)
+        ship.halite = 500
+        ship.minHarvestAmount = 500
+        def start = new Position(0, 0)
+        gameMap[start].halite = 900
+        when:
+        navigateShips()
+        then:
+        ship.position == new Position(1, 0)
+    }
+
+    def "When a ship is exploring, and an area influence of 1000 east, but is currently in an area it will not move east"() {
+        def start = new Position(0, 0)
+        def strategy = Mock(PlayerStrategyInterface)
+        strategy.getExplorationInfluence(_) >> new InfluenceVector(1000, 0)
+        player.strategy = strategy
+        engine.updateShipPosition(ship, start)
+        ship.halite = 500
+        gameMap[start].halite = 900
+        when:
+        navigateShips()
+        then:
+        ship.position == start
+    }
+
+    def "When an exploring ship, and navigating ship meet and want to pass through each other, they should do so in 1 turn"() {
+        def explorerStart = new Position(0, 0)
+        def navigatorStart = new Position(1, 0)
+        engine.updateShipPosition(ship, explorerStart)
+        ship.halite = 100
+        def navigatingShip = engine.createShip(navigatorStart, 100)
+        navigatingShip.destination = explorerStart
+        game.gameMap[navigatorStart].halite = 500
+        when:
+        navigateShips()
+        then:
+        ship.position == navigatorStart
+        navigatingShip.position == explorerStart
+    }
+
     def "When a navigating ship at 0,0 with 0 halite on board, and 100 halite in the map cell, will desire to stay still"() {
         engine.updateShipPosition(0, 0, 0)
         gameMap[new Position(0, 0)].halite = 100

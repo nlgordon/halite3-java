@@ -1,5 +1,7 @@
 package com.insanedev.hlt
 
+import com.insanedev.InfluenceVector
+import com.insanedev.PlayerStrategyInterface
 import com.insanedev.hlt.engine.PlayerUpdate
 import groovy.transform.EqualsAndHashCode
 
@@ -15,6 +17,7 @@ class Player {
     final Map<EntityId, Ship> ships = [:]
     final Map<EntityId, Dropoff> dropoffs = [:]
     Game game
+    PlayerStrategyInterface strategy
 
     private Player(final PlayerId id) {
         this.id = id
@@ -107,8 +110,15 @@ class Player {
 
     List<PossibleMove> collectDesiredMoves() {
         return getActiveShips()
-                .map({ it.getDesiredMove() })
+                .map({ it.getDesiredMove(getInfluence(it)) })
                 .collect(Collectors.toList())
+    }
+
+    InfluenceVector getInfluence(Ship it) {
+        if (strategy) {
+            return strategy.getExplorationInfluence(it.position)
+        }
+        return InfluenceVector.ZERO
     }
 
     Stream<Ship> getActiveShips() {
