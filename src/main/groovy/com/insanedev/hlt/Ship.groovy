@@ -1,5 +1,6 @@
 package com.insanedev.hlt
 
+import com.insanedev.Configurables
 import com.insanedev.InfluenceVector
 import groovy.transform.EqualsAndHashCode
 
@@ -16,7 +17,7 @@ class Ship extends Entity {
     final Game game
     Position destination
     ShipStatus status = ShipStatus.EXPLORING
-    int minHarvestAmount = 25
+    int minHarvestAmount = Configurables.MIN_HARVEST_AMOUNT
     int fullAmount = Constants.MAX_HALITE
     Position positionMovingTo
     List<ShipHistory> history = []
