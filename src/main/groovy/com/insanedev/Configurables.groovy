@@ -7,5 +7,6 @@ class Configurables {
     public static final BigDecimal AREA_MINIMUM_SCALE = 0.25
     public static final int AREA_AVERAGE_MULTIPLIER = 3
     public static final BigDecimal TURNS_TO_MAKE_SHIPS = 0.5
+    public static final BigDecimal TURNS_UNTIL_ATTACK_SHIPYARDS = 0.2
     public static final int MIN_HARVEST_AMOUNT = 25
 }

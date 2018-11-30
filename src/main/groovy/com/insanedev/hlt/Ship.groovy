@@ -81,9 +81,9 @@ class Ship extends Entity {
             return createPossibleMove(Direction.STILL)
         }
         return possibleCardinalMoves()
+                // TODO: Move this up a step
                 .map({it.influence = influence; it})
-                .filter({
-            it.halite > currentCellHalite || currentCellHalite == 0 })
+                .filter({ it.halite > currentCellHalite || currentCellHalite == 0 })
                 .sorted({ PossibleMove left, PossibleMove right -> right.halite.compareTo(left.halite) })
                 .filter({ it.ableToMoveOrNavigating })
                 .findFirst()
@@ -267,9 +267,6 @@ class PossibleMove {
     }
 
     int getHalite() {
-        if (ship.game.gameMap[ship.position].area) {
-            return mapCell.halite
-        }
         return mapCell.halite + influence.appliedToDirection(direction)
     }
 

@@ -40,6 +40,10 @@ class GameMap {
         return at(entity.position)
     }
 
+    MapCell at(int x, int y) {
+        return at(new Position(x, y))
+    }
+
     int calculateDistance(final Position source, final Position target) {
         final Position normalizedSource = normalize(source)
         final Position normalizedTarget = normalize(target)

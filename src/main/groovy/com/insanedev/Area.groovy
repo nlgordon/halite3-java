@@ -4,6 +4,7 @@ import com.insanedev.hlt.Game
 import com.insanedev.hlt.MapCell
 import com.insanedev.hlt.Position
 import groovy.transform.EqualsAndHashCode
+import reactor.core.publisher.Flux
 
 import java.util.stream.IntStream
 import java.util.stream.Stream
@@ -61,5 +62,27 @@ class Area {
 
     BigDecimal getAverageHalite() {
         return getCells().mapToInt({it.halite}).average().orElse(0)
+    }
+
+    InfluenceVector getVectorForPosition(Position position) {
+        if (internalCells.containsKey(position)) {
+            // Get cell with max halite, influence that direction
+            MapCell max = Flux.fromIterable(internalCells.values())
+                    .sort({MapCell left, MapCell right -> right.halite <=> left.halite})
+                    .blockFirst()
+            return calculateVector(max.position, position, max.halite)
+        }
+        return calculateVector(center, position, averageHalite as int)
+    }
+
+    InfluenceVector calculateVector(Position target, Position source, int halite) {
+        int dx = target.x - source.x
+        int dy = target.y - source.y
+
+        def magnitude = Math.sqrt(dx * dx + dy * dy)
+        def haliteScaling = Math.pow(Configurables.INFLUENCE_DECAY_RATE, magnitude) * halite / magnitude
+        int xHaliteInfluence = dx * haliteScaling
+        int yHaliteInfluence = dy * haliteScaling
+        return new InfluenceVector(xHaliteInfluence, yHaliteInfluence)
     }
 }

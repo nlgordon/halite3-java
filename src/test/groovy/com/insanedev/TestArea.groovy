@@ -117,4 +117,13 @@ class TestArea extends BaseTestFakeGameEngine {
             })
         })
     }
+
+    def "When a ship is within an area, it receives influence based on max halite for cells in the area"() {
+        def center = new Position(5, 5)
+        def area = new Area(center, 5, 5, game)
+        game.gameMap.at(7,5).halite = 1000
+
+        expect:
+        area.getVectorForPosition(center).x > 0
+    }
 }

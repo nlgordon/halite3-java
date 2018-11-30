@@ -57,24 +57,26 @@ class PlayerStrategy implements PlayerStrategyInterface {
 
     // TODO: Not Tested
     void assignAttackShips() {
-        Flux.fromIterable(game.players)
-                .filter({ it != me })
-                .filter({
-            !Flux.fromIterable(attackShips).filter({ Ship ship -> ship.destination == it.shipyard.position }).blockFirst()
-        })
-                .subscribe({
-            Log.log("Need to attack $it.id")
-            Ship ship = Flux.fromIterable(me.ships.values()).filter({ !it.destination }).blockFirst()
-            if (ship) {
-                Log.log("Assigning $ship.id to attack player $it.id at $it.shipyard.position")
-                ship.destination = it.shipyard.position
-                attackShips.add(ship)
-            }
-        })
+        if (game.turnNumber > Constants.MAX_TURNS * Configurables.TURNS_UNTIL_ATTACK_SHIPYARDS) {
+            Flux.fromIterable(game.players)
+                    .filter({ it != me })
+                    .filter({
+                !Flux.fromIterable(attackShips).filter({ Ship ship -> ship.destination == it.shipyard.position }).blockFirst()
+            })
+                    .subscribe({
+                Log.log("Need to attack $it.id")
+                Ship ship = Flux.fromIterable(me.ships.values()).filter({ !it.destination }).blockFirst()
+                if (ship) {
+                    Log.log("Assigning $ship.id to attack player $it.id at $it.shipyard.position")
+                    ship.destination = it.shipyard.position
+                    attackShips.add(ship)
+                }
+            })
 
-        Flux.fromIterable(attackShips)
-                .filter({ it.position == it.destination && it.status != ShipStatus.HOLDING })
-                .subscribe({ it.status = ShipStatus.HOLDING })
+            Flux.fromIterable(attackShips)
+                    .filter({ it.position == it.destination && it.status != ShipStatus.HOLDING })
+                    .subscribe({ it.status = ShipStatus.HOLDING })
+        }
     }
 
     void handleFrame() {
@@ -123,25 +125,12 @@ class PlayerStrategy implements PlayerStrategyInterface {
     InfluenceVector getExplorationInfluence(Position position) {
         return Flux.fromIterable(areas)
                 .filter({it.averageHalite > Configurables.MIN_HALITE_FOR_AREA_CONSIDERATION })
-                .map({ getVectorForSingleAreaAndPosition(it, position) })
-                .reduce(new InfluenceVector(0, 0), { InfluenceVector accumulator, InfluenceVector addition ->
+                .map({ it.getVectorForPosition(position) })
+                .reduce(InfluenceVector.ZERO, { InfluenceVector accumulator, InfluenceVector addition ->
             accumulator.add(addition)
         })
                 .defaultIfEmpty(InfluenceVector.ZERO)
                 .block()
-    }
-
-    InfluenceVector getVectorForSingleAreaAndPosition(Area area, Position position) {
-        int halite = area.averageHalite
-        int dx = area.center.x - position.x
-        int dy = area.center.y - position.y
-
-        def magnitude = Math.sqrt(dx * dx + dy * dy)
-        def haliteScaling = Math.pow(Configurables.INFLUENCE_DECAY_RATE, magnitude) * halite / magnitude
-        int xHaliteInfluence = dx * haliteScaling
-        int yHaliteInfluence = dy * haliteScaling
-        def influenceVector = new InfluenceVector(xHaliteInfluence, yHaliteInfluence)
-        return influenceVector
     }
 }
 
