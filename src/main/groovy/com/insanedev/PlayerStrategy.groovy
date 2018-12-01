@@ -4,11 +4,14 @@ import com.insanedev.hlt.*
 import com.insanedev.hlt.engine.GameEngine
 import groovy.transform.Canonical
 import reactor.core.publisher.Flux
+import reactor.math.MathFlux
 
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 
 interface PlayerStrategyInterface {
+
+    boolean shouldDoRollup()
 
     InfluenceVector getExplorationInfluence(Position position)
 }
@@ -82,10 +85,15 @@ class PlayerStrategy implements PlayerStrategyInterface {
         }
     }
 
+    void updateAreas() {
+        Flux.fromIterable(areas).subscribe({it.updateStatus()})
+    }
+
     void handleFrame() {
         def start = LocalTime.now()
         engine.updateFrame()
         me.updateDropoffs()
+        updateAreas()
         assignAttackShips()
 
         /* Phases of Turn Loop
@@ -125,9 +133,20 @@ class PlayerStrategy implements PlayerStrategyInterface {
     }
 
     @Override
+    boolean shouldDoRollup() {
+        int remainingTurns = Constants.MAX_TURNS - game.turnNumber
+        def shipyardPosition = me.shipyard.position
+        int maxDistanceFromShipyard = MathFlux.max(Flux.fromStream(me.activeShips)
+                .map({ it.calculateDistance(shipyardPosition)}))
+                .defaultIfEmpty(0)
+                .block()
+        return maxDistanceFromShipyard >= remainingTurns
+    }
+
+    @Override
     InfluenceVector getExplorationInfluence(Position position) {
         return Flux.fromIterable(areas)
-                .filter({it.averageHalite > Configurables.MIN_HALITE_FOR_AREA_CONSIDERATION })
+                .filter({it.status })
                 .map({ it.getVectorForPosition(position) })
                 .reduce(InfluenceVector.ZERO, { InfluenceVector accumulator, InfluenceVector addition ->
             accumulator.add(addition)

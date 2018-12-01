@@ -55,7 +55,7 @@ class TestArea extends BaseTestFakeGameEngine {
         then:
         area.cells.filter({
             it.position == center
-        }).count() == 1
+        }).count().block() == 1
     }
 
     def "An area of 3x1 at location 5,5 will contain the rectangle of cells from 4,5 to 6,5"() {
@@ -66,7 +66,7 @@ class TestArea extends BaseTestFakeGameEngine {
         area.cells.filter({
             it.position.x >= 4 && it.position.x <= 6 &&
                     it.position.y == 5
-        }).count() == 3
+        }).count().block() == 3
     }
 
     def "An area of 3x5 at location 5,5 will contain the rectangle of cells from 4,3 to 6,7"() {
@@ -77,7 +77,7 @@ class TestArea extends BaseTestFakeGameEngine {
         area.cells.filter({
             it.position.x >= 4 && it.position.x <= 6 &&
                     it.position.y >= 3 && it.position.y <= 7
-        }).count() == 15
+        }).count().block() == 15
     }
 
     def "An area of 1x1 with 0 halite reports 0 halite for total"() {
@@ -125,5 +125,45 @@ class TestArea extends BaseTestFakeGameEngine {
 
         expect:
         area.getVectorForPosition(center).x > 0
+    }
+
+    def "When an area updates its status, and average is below the MIN_CELL_AMOUNT, then it removes it self from all affected cells"() {
+        def center = new Position(5, 5)
+        def area = new Area(center, 1, 1, game)
+        game.gameMap[center].halite = Configurables.MIN_CELL_AMOUNT / 2
+        when:
+        area.updateStatus()
+        then:
+        game.gameMap[center].area == null
+    }
+
+    def "When an area updates its status, and average is above the MIN_CELL_AMOUNT, then it is still on all affected cells"() {
+        def center = new Position(5, 5)
+        def area = new Area(center, 1, 1, game)
+        game.gameMap[center].halite = Configurables.MIN_CELL_AMOUNT * 2
+        when:
+        area.updateStatus()
+        then:
+        game.gameMap[center].area == area
+    }
+
+    def "When an area updates its status, and average is below the MIN_CELL_AMOUNT, then it reports as not active"() {
+        def center = new Position(5, 5)
+        def area = new Area(center, 1, 1, game)
+        game.gameMap[center].halite = Configurables.MIN_CELL_AMOUNT / 2
+        when:
+        area.updateStatus()
+        then:
+        !area.status
+    }
+
+    def "When an area updates its status, and average is above the MIN_CELL_AMOUNT, then it reports itself as active"() {
+        def center = new Position(5, 5)
+        def area = new Area(center, 1, 1, game)
+        game.gameMap[center].halite = Configurables.MIN_CELL_AMOUNT * 2
+        when:
+        area.updateStatus()
+        then:
+        area.status
     }
 }

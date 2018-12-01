@@ -5,6 +5,7 @@ import com.insanedev.hlt.MapCell
 import com.insanedev.hlt.Position
 import groovy.transform.EqualsAndHashCode
 import reactor.core.publisher.Flux
+import reactor.math.MathFlux
 
 import java.util.stream.IntStream
 import java.util.stream.Stream
@@ -16,6 +17,8 @@ class Area {
     int height
     Game game
     private Map<Position, MapCell> internalCells = [:]
+    boolean status = true
+    BigDecimal cachedAverageHalite
 
     Area(Position center, int width, int height, Game game) {
         if (width % 2 != 1) {
@@ -52,16 +55,32 @@ class Area {
         })
     }
 
-    Stream<MapCell> getCells() {
-        return internalCells.values().stream()
+    Flux<MapCell> getCells() {
+        return Flux.fromIterable(internalCells.values())
     }
 
     int getHalite() {
-        return getCells().mapToInt({it.halite}).sum()
+        return MathFlux.sumInt(getCells().map({it.halite})).block()
     }
 
     BigDecimal getAverageHalite() {
-        return getCells().mapToInt({it.halite}).average().orElse(0)
+        if (cachedAverageHalite == null) {
+            computeAverageHalite()
+        }
+        return cachedAverageHalite
+    }
+
+    private void computeAverageHalite() {
+        cachedAverageHalite = MathFlux.averageDouble(getCells().map({ it.halite })).block()
+    }
+
+    void updateStatus() {
+        computeAverageHalite()
+        cachedAverageHalite = averageHalite
+        if (averageHalite <= Configurables.MIN_HALITE_FOR_AREA_CONSIDERATION) {
+            getCells().subscribe({it.area = null})
+            status = false
+        }
     }
 
     InfluenceVector getVectorForPosition(Position position) {

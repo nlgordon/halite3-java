@@ -69,6 +69,10 @@ class Player {
 
     List<MoveCommand> navigateShips() {
         //logActiveShips()
+        if (strategy && strategy.shouldDoRollup()) {
+            activeShips.forEach({it.destination = shipyard.position})
+            game.gameMap[shipyard].occupiedOverride = false
+        }
         List<MoveCommand> executedCommands = []
         Tuple2<List<PossibleMove>, List<MoveCommand>> state = new Tuple2<>(collectDesiredMoves(), executedCommands)
         state = executeEasyMoves(state)
