@@ -21,6 +21,16 @@ class GameMap {
                 cells[y][x] = new MapCell(new Position(x, y), 0)
             }
         }
+
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; x++) {
+                def cell = cells[y][x]
+                cell.north = cells[normalizeY(y-1)][x]
+                cell.south = cells[normalizeY(y+1)][x]
+                cell.east = cells[y][normalizeX(x+1)]
+                cell.west = cells[y][normalizeX(x-1)]
+            }
+        }
     }
 
     MapCell getAt(final Position position) {
@@ -58,9 +68,15 @@ class GameMap {
     }
 
     Position normalize(final Position position) {
-        final int x = ((position.x % width) + width) % width
-        final int y = ((position.y % height) + height) % height
-        return new Position(x, y)
+        return new Position(normalizeX(position.x), normalizeY(position.y))
+    }
+
+    int normalizeY(int y) {
+        return ((y % height) + height) % height
+    }
+
+    int normalizeX(int x) {
+        return ((x % width) + width) % width
     }
 
     ArrayList<Direction> getUnsafeMoves(final Position source, final Position destination) {
