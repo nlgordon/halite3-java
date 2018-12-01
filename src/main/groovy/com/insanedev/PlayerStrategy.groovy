@@ -65,7 +65,10 @@ class PlayerStrategy implements PlayerStrategyInterface {
             })
                     .subscribe({
                 Log.log("Need to attack $it.id")
-                Ship ship = Flux.fromIterable(me.ships.values()).filter({ !it.destination }).blockFirst()
+                Ship ship = Flux.fromIterable(me.ships.values())
+                        .filter({ !it.destination })
+                        .sort({Ship left, Ship right -> right.halite.compareTo(left.halite)})
+                        .blockFirst()
                 if (ship) {
                     Log.log("Assigning $ship.id to attack player $it.id at $it.shipyard.position")
                     ship.destination = it.shipyard.position
