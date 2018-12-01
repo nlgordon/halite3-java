@@ -4,6 +4,7 @@ import com.insanedev.InfluenceVector
 import com.insanedev.PlayerStrategyInterface
 import com.insanedev.hlt.engine.PlayerUpdate
 import groovy.transform.EqualsAndHashCode
+import reactor.core.publisher.Flux
 
 import java.util.function.Function
 import java.util.stream.Collectors
@@ -181,9 +182,12 @@ class Player {
         Stream.concat(Stream.of(shipyard), dropoffs.values().stream()).forEach({
             def mapCell = game.gameMap[it.position]
             if (mapCell.ship && mapCell.ship.player != this) {
-                mapCell.occupiedOverride = false
+//                Flux.just(mapCell, mapCell.north, mapCell.south, mapCell.east, mapCell.west)
+                Flux.just(mapCell)
+                        .subscribe({it.occupiedOverride = false})
             } else {
-                mapCell.occupiedOverride = null
+                Flux.just(mapCell)
+                        .subscribe({it.occupiedOverride = null})
             }
         })
     }

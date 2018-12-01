@@ -17,7 +17,7 @@ class Ship extends Entity {
     final Game game
     Position destination
     ShipStatus status = ShipStatus.EXPLORING
-    int minHarvestAmount = Configurables.MIN_HARVEST_AMOUNT
+    int minCellAmount = Configurables.MIN_CELL_AMOUNT
     int fullAmount = Constants.MAX_HALITE
     Position positionMovingTo
     List<ShipHistory> history = []
@@ -77,7 +77,7 @@ class Ship extends Entity {
 
     PossibleMove getExplorationMove(InfluenceVector influence) {
         def currentCellHalite = game.gameMap[position].halite
-        if (currentCellHalite * 0.25 >= minHarvestAmount || !hasHaliteToMove()) {
+        if (currentCellHalite >= minCellAmount || !hasHaliteToMove()) {
             return createPossibleMove(Direction.STILL)
         }
         return possibleCardinalMoves()
@@ -241,11 +241,14 @@ class PossibleMove {
     }
 
     boolean isAbleToMove() {
-        return !mapCell.occupied || mapCell.ship == ship
+        if (mapCell.ship == ship) {
+            return true
+        }
+        return (!mapCell.occupied && !mapCell.isNearOpponent(ship.player))
     }
 
     boolean isAbleToMoveOrNavigating() {
-        return ableToMove || mapCell.ship.status == ShipStatus.NAVIGATING
+        return ableToMove || mapCell?.ship?.status == ShipStatus.NAVIGATING
     }
 
     void executeIfAble() {

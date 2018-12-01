@@ -187,7 +187,7 @@ class TestShip extends BaseTestFakeGameEngine {
         gameMap[start].halite = 100
         gameMap[start.directionalOffset(Direction.EAST)].halite = 100
         gameMap[start.directionalOffset(Direction.SOUTH)].halite = 100
-        ship.minHarvestAmount = 1
+        ship.minCellAmount = 1
         when:
         navigateShips()
         then:
@@ -201,7 +201,7 @@ class TestShip extends BaseTestFakeGameEngine {
         gameMap[start].halite = 110
         gameMap[start.directionalOffset(Direction.EAST)].halite = 100
         gameMap[start.directionalOffset(Direction.SOUTH)].halite = 100
-        ship.minHarvestAmount = 200
+        ship.minCellAmount = 200
         when:
         navigateShips()
         then:
@@ -215,7 +215,7 @@ class TestShip extends BaseTestFakeGameEngine {
         gameMap[start].halite = 100
         gameMap[start.directionalOffset(Direction.EAST)].halite = 100
         gameMap[start.directionalOffset(Direction.SOUTH)].halite = 100
-        ship.minHarvestAmount = 25
+        ship.minCellAmount = 100
         when:
         navigateShips()
         then:
@@ -244,15 +244,14 @@ class TestShip extends BaseTestFakeGameEngine {
         ship.destination == player.shipyard.position
     }
 
-    def "When a ship is exploring, and an area influence of 1000 east, it will move east even if the current cell has 900"() {
+    def "When a ship is exploring, and an area influence of 1000 east, it will move east the current cell is below the minimum"() {
         def strategy = Mock(PlayerStrategyInterface)
         strategy.getExplorationInfluence(_) >> new InfluenceVector(1000, 0)
         player.strategy = strategy
         engine.updateShipPosition(0, 0, 0)
         ship.halite = 500
-        ship.minHarvestAmount = 500
         def start = new Position(0, 0)
-        gameMap[start].halite = 900
+        gameMap[start].halite = 90
         when:
         navigateShips()
         then:

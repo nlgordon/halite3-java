@@ -12,7 +12,7 @@ import java.util.stream.IntStream
 class TestShipComplexNavigation extends BaseTestFakeGameEngine {
 
     def setup() {
-        initGame(0, 2, 2, 16, 16)
+        initGameWithMultiplePlayers(2, 2, 14,14, 16, 16)
     }
 
     def "Map is 16x16"() {
@@ -139,5 +139,16 @@ class TestShipComplexNavigation extends BaseTestFakeGameEngine {
 
         where:
         count << [2, 3, 4]
+    }
+
+    def "When a ship at 8,8 has an opponent ship at 9,9, it won't navigate through 8,9 on the way to 8,10"() {
+        def myShip = engine.createShipForPlayer(0, 8,8, 0)
+        def opponentShip = engine.createShipForPlayer(1, 9,9, 0)
+        opponentShip.status = ShipStatus.HOLDING
+        myShip.destination = new Position(8,10)
+        when:
+        runTurns(1)
+        then:
+        myShip.position != new Position(8,9)
     }
 }

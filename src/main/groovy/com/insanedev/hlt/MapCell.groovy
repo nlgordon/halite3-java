@@ -31,13 +31,13 @@ class MapCell {
     }
 
     boolean isNearOpponent(Player friendly) {
-        if (north.ship && north.ship.player != friendly) {
+        if (north.occupied && north.ship.player != friendly) {
             return true
-        } else if (south.ship && south.ship.player != friendly) {
+        } else if (south.occupied && south.ship.player != friendly) {
             return true
-        } else if (east.ship && east.ship.player != friendly) {
+        } else if (east.occupied && east.ship.player != friendly) {
             return true
-        } else if (west.ship && west.ship.player != friendly) {
+        } else if (west.occupied && west.ship.player != friendly) {
             return true
         }
 
