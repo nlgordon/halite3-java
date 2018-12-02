@@ -186,12 +186,12 @@ class Player {
         Stream.concat(Stream.of(shipyard), dropoffs.values().stream()).forEach({
             def mapCell = game.gameMap[it.position]
             if (mapCell.ship && mapCell.ship.player != this) {
-//                Flux.just(mapCell, mapCell.north, mapCell.south, mapCell.east, mapCell.west)
-                Flux.just(mapCell)
-                        .subscribe({it.occupiedOverride = false})
+                mapCell.occupiedOverride = false
             } else {
-                Flux.just(mapCell)
-                        .subscribe({it.occupiedOverride = null})
+                mapCell.occupiedOverride = null
+                if (mapCell?.ship?.player == this && mapCell.ship.status == ShipStatus.HOLDING) {
+                    mapCell.ship.status = ShipStatus.EXPLORING
+                }
             }
         })
     }

@@ -70,6 +70,7 @@ class PlayerStrategy implements PlayerStrategyInterface {
                 Log.log("Need to attack $it.id")
                 Ship ship = Flux.fromIterable(me.ships.values())
                         .filter({ !it.destination })
+                        .filter({ it.halite < 100 })
                         .sort({Ship left, Ship right -> right.halite.compareTo(left.halite)})
                         .blockFirst()
                 if (ship) {
