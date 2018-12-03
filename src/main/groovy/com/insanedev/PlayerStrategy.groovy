@@ -62,7 +62,7 @@ class PlayerStrategy implements PlayerStrategyInterface {
     void assignAttackShips() {
         if (game.turnNumber > Constants.MAX_TURNS * Configurables.TURNS_UNTIL_ATTACK_SHIPYARDS) {
             Flux.fromIterable(game.players)
-                    .filter({ it != me })
+                    .filter({ it.id != me.id })
                     .filter({
                 !Flux.fromIterable(attackShips).filter({ Ship ship -> ship.destination == it.shipyard.position }).blockFirst()
             })

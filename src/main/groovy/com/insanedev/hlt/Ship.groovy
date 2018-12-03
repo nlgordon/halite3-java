@@ -3,6 +3,7 @@ package com.insanedev.hlt
 import com.insanedev.Configurables
 import com.insanedev.InfluenceVector
 import groovy.transform.EqualsAndHashCode
+import reactor.core.publisher.Flux
 
 import java.util.stream.Stream
 
@@ -217,6 +218,60 @@ class Ship extends Entity {
     Stream<PossibleMove> possibleCardinalMoves() {
         return Direction.ALL_CARDINALS.stream()
                 .map({ createPossibleMove(it) })
+    }
+
+    boolean getInspired() {
+        Flux<Position> positionsToCheck = Flux.fromStream(possibleCardinalMoves()).map({it.position})
+        int dx = 4
+        int dy = 0
+        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
+        dx = 0
+        dy = 4
+        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
+        dx = 0
+        dy = 3
+        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
+        dx = 3
+        dy = 0
+        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
+        dx = 1
+        dy = 3
+        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
+        dx = 3
+        dy = 1
+        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
+        dx = 2
+        dy = 2
+        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
+        dx = 1
+        dy = 1
+        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
+        dx = 2
+        dy = 0
+        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
+        dx = 0
+        dy = 2
+        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
+        dx = 1
+        dy = 2
+        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
+        dx = 2
+        dy = 1
+        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
+
+        long otherShips = positionsToCheck.distinct().filter({game.gameMap[it].occupied}).count().block()
+        if (otherShips >= 2) {
+            return true
+        }
+        return false
+    }
+
+    private Flux<Position> positionsForMutations(Flux<Position> positionsToCheck, int dx, int dy) {
+        List<Tuple2<Integer, Integer>> mutations = [new Tuple2(1, 1), new Tuple2(1, -1), new Tuple2(-1, -1), new Tuple2(-1, 1)]
+        positionsToCheck = Flux.concat(positionsToCheck, Flux.fromIterable(mutations).map({
+            position.offset(it.first * dx, it.second * dy)
+        }))
+        return positionsToCheck
     }
 
     String toString() {

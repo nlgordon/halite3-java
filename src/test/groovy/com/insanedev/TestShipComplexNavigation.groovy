@@ -151,4 +151,34 @@ class TestShipComplexNavigation extends BaseTestFakeGameEngine {
         then:
         myShip.position != new Position(8,9)
     }
+
+    def "When a ship at 8,8 has opponent ships at 13,8 and 8,13, it is not inspired"() {
+        def myShip = engine.createShipForPlayer(0, 8,8, 0)
+        engine.createShipForPlayer(1, 8,13, 0)
+        engine.createShipForPlayer(1, 13,8, 0)
+
+        expect:
+        !myShip.inspired
+    }
+
+    @Unroll
+    def "When a ship at 8,8 has opponent ships at #x1,#y1 and #x1,#y1 it is inspired"() {
+        def myShip = engine.createShipForPlayer(0, 8,8, 0)
+        engine.createShipForPlayer(1, x1, y1, 0)
+        engine.createShipForPlayer(1, x2, y2, 0)
+
+        expect:
+        myShip.inspired
+
+        where:
+        x1 | y1 | x2 | y2
+        8  | 9  | 9  | 8
+        8  | 12 | 12 | 8
+        8  | 11 | 11 | 8
+        9  | 11 | 11 | 9
+        10 | 10 | 6  | 6
+        9  | 9  | 7  | 7
+        10 | 8  | 8  | 10
+        9  | 10 | 10 | 9
+    }
 }

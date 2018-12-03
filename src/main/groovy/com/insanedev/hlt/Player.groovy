@@ -4,7 +4,6 @@ import com.insanedev.InfluenceVector
 import com.insanedev.PlayerStrategyInterface
 import com.insanedev.hlt.engine.PlayerUpdate
 import groovy.transform.EqualsAndHashCode
-import reactor.core.publisher.Flux
 
 import java.util.function.Function
 import java.util.stream.Collectors
@@ -70,7 +69,7 @@ class Player {
     List<MoveCommand> navigateShips() {
         //logActiveShips()
         if (strategy && strategy.shouldDoRollup()) {
-            activeShips.forEach({it.destination = shipyard.position})
+            activeShips.forEach({ it.destination = shipyard.position })
             game.gameMap[shipyard].occupiedOverride = false
         }
         List<MoveCommand> executedCommands = []
