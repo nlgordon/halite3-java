@@ -220,11 +220,12 @@ class Ship extends Entity {
         this.position = newPosition
         this.halite = newHalite
 
+        //TODO: Move all this logic to a navigation section instead of handling here on update
         if (position == destination && status == ShipStatus.NAVIGATING) {
             status = ShipStatus.EXPLORING
         } else if (full && status == ShipStatus.EXPLORING) {
             setDestination(game.me.shipyard.position)
-        }
+        } //TODO: Need to handle when it will get overful this turn and send home
     }
 
     Stream<PossibleMove> possibleCardinalMoves() {
