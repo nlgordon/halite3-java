@@ -251,7 +251,7 @@ class TestShip extends BaseTestFakeGameEngine {
         engine.updateShipPosition(0, 0, 0)
         ship.halite = 500
         def start = new Position(0, 0)
-        gameMap[start].halite = 90
+        gameMap[start].halite = ship.minCellAmount - 10
         when:
         navigateShips()
         then:

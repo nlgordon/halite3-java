@@ -4,7 +4,6 @@ import com.insanedev.Configurables
 import com.insanedev.FeatureFlags
 import com.insanedev.InfluenceVector
 import groovy.transform.EqualsAndHashCode
-import javafx.geometry.Pos
 import reactor.core.publisher.Flux
 import reactor.math.MathFlux
 
@@ -31,6 +30,9 @@ class Ship extends Entity {
         this.halite = halite
         this.game = game
         game.gameMap[position].ship = this
+        if (FeatureFlags.getFlagStatus(player, "LOWER_MIN_CELL_AMOUNT")) {
+            minCellAmount = minCellAmount / 2
+        }
     }
 
     boolean isFull() {
@@ -85,8 +87,8 @@ class Ship extends Entity {
             return createPossibleMove(Direction.STILL)
         }
         return possibleCardinalMoves()
-                // TODO: Move this up a step
-                .map({it.influence = influence; it})
+        // TODO: Move this up a step
+                .map({ it.influence = influence; it })
                 .filter({ it.halite > currentCellHalite || currentCellHalite == 0 })
                 .sorted({ PossibleMove left, PossibleMove right -> right.halite.compareTo(left.halite) })
                 .filter({ it.ableToMoveOrNavigating })
@@ -159,7 +161,7 @@ class Ship extends Entity {
 
         if (directionList) {
             return MathFlux.min(Flux.fromIterable(directionList)
-                    .map({createPossibleMove(it)}),
+                    .map({ createPossibleMove(it) }),
                     { PossibleMove left, PossibleMove right -> left.halite.compareTo(right.halite) })
                     .block().direction
         }
@@ -242,7 +244,7 @@ class Ship extends Entity {
             }
         }
 
-        long otherShips = positionsToCheck.distinct().filter({game.gameMap[it].occupied}).count().block()
+        long otherShips = positionsToCheck.distinct().filter({ game.gameMap[it].occupied }).count().block()
         if (otherShips >= 2) {
             return true
         }

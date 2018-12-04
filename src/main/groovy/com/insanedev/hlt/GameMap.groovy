@@ -1,5 +1,7 @@
 package com.insanedev.hlt
 
+import reactor.core.publisher.Flux
+
 import java.util.function.Consumer
 import java.util.function.Function
 import java.util.stream.IntStream
@@ -128,5 +130,9 @@ class GameMap {
 
     Stream<MapCell> streamCells() {
         IntStream.range(0, height).mapToObj({cells[it].collect().stream()}).flatMap(Function.identity())
+    }
+
+    Flux<MapCell> fluxOfCells() {
+        Flux.range(0, height).flatMap({Flux.fromArray(cells[it])})
     }
 }

@@ -1,8 +1,12 @@
 package com.insanedev
 
 import com.insanedev.fakeengine.BaseTestFakeGameEngine
+import com.insanedev.hlt.GameMap
 import com.insanedev.hlt.Position
+import spock.lang.Ignore
 
+import java.time.LocalTime
+import java.time.temporal.ChronoUnit
 import java.util.stream.IntStream
 
 class TestArea extends BaseTestFakeGameEngine {
@@ -130,7 +134,7 @@ class TestArea extends BaseTestFakeGameEngine {
     def "When an area updates its status, and average is below the MIN_CELL_AMOUNT, then it removes it self from all affected cells"() {
         def center = new Position(5, 5)
         def area = new Area(center, 1, 1, game)
-        game.gameMap[center].halite = Configurables.MIN_CELL_AMOUNT / 2
+        game.gameMap[center].halite = Configurables.MIN_HALITE_FOR_AREA_CONSIDERATION / 2
         when:
         area.updateStatus()
         then:
@@ -140,7 +144,7 @@ class TestArea extends BaseTestFakeGameEngine {
     def "When an area updates its status, and average is above the MIN_CELL_AMOUNT, then it is still on all affected cells"() {
         def center = new Position(5, 5)
         def area = new Area(center, 1, 1, game)
-        game.gameMap[center].halite = Configurables.MIN_CELL_AMOUNT * 2
+        game.gameMap[center].halite = Configurables.MIN_HALITE_FOR_AREA_CONSIDERATION * 2
         when:
         area.updateStatus()
         then:
@@ -150,7 +154,7 @@ class TestArea extends BaseTestFakeGameEngine {
     def "When an area updates its status, and average is below the MIN_CELL_AMOUNT, then it reports as not active"() {
         def center = new Position(5, 5)
         def area = new Area(center, 1, 1, game)
-        game.gameMap[center].halite = Configurables.MIN_CELL_AMOUNT / 2
+        game.gameMap[center].halite = Configurables.MIN_HALITE_FOR_AREA_CONSIDERATION / 2
         when:
         area.updateStatus()
         then:
@@ -160,10 +164,31 @@ class TestArea extends BaseTestFakeGameEngine {
     def "When an area updates its status, and average is above the MIN_CELL_AMOUNT, then it reports itself as active"() {
         def center = new Position(5, 5)
         def area = new Area(center, 1, 1, game)
-        game.gameMap[center].halite = Configurables.MIN_CELL_AMOUNT * 2
+        game.gameMap[center].halite = Configurables.MIN_HALITE_FOR_AREA_CONSIDERATION * 2
         when:
         area.updateStatus()
         then:
         area.status
+    }
+
+    @Ignore
+    def "How long does it take to calculate a vector for the entire map?"() {
+        GameMap map = new GameMap(4, 4)
+        for (int x = 0; x < map.width; x++) {
+            for (int y = 0; y < map.height; y++) {
+//                map.at(x, y).halite = (x + 1) * (y + 1)
+                map.at(x, y).halite = x + y
+            }
+        }
+        when:
+        def start = LocalTime.now()
+//        def vector = InfluenceCalculator.calculateInfluenceForMap(map, new Position(32,32))
+        def vector = InfluenceCalculator.calculateInfluenceForMapIterative(map, new Position((int)(map.width / 2),(int)(map.height / 2)))
+        def duration = ChronoUnit.MILLIS.between(start, LocalTime.now())
+        println("Init duration: $duration")
+        println vector
+
+        then:
+        1==1
     }
 }

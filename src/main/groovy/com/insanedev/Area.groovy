@@ -18,6 +18,7 @@ class Area {
     private Map<Position, MapCell> internalCells = [:]
     boolean status = true
     BigDecimal cachedAverageHalite
+    private minHaliteForAreaConsideration
 
     Area(Position center, int width, int height, Game game) {
         if (width % 2 != 1) {
@@ -32,6 +33,10 @@ class Area {
         this.game = game
 
         collectCoveredCells()
+        minHaliteForAreaConsideration = Configurables.MIN_HALITE_FOR_AREA_CONSIDERATION
+        if (FeatureFlags.getFlagStatus(game.me, "AREA_LOW_HALITE")) {
+            minHaliteForAreaConsideration = minHaliteForAreaConsideration / 2
+        }
     }
 
     void collectCoveredCells() {
@@ -76,7 +81,7 @@ class Area {
     void updateStatus() {
         computeAverageHalite()
         cachedAverageHalite = averageHalite
-        if (averageHalite <= Configurables.MIN_HALITE_FOR_AREA_CONSIDERATION) {
+        if (averageHalite <= this.minHaliteForAreaConsideration) {
             getCells().subscribe({ it.area = null })
             status = false
         }
@@ -88,20 +93,14 @@ class Area {
             MapCell max = Flux.fromIterable(internalCells.values())
                     .sort({ MapCell left, MapCell right -> right.halite <=> left.halite })
                     .blockFirst()
-            return calculateVector(max.position, position, max.halite)
+            if (FeatureFlags.getFlagStatus(game.me, "VECTOR_IN_MAP")) {
+                return InfluenceCalculator.calculateVectorInMap(game.gameMap, max.position, position, max.halite)
+            }
+            return InfluenceCalculator.calculateVector(max.position, position, max.halite)
         }
-        return calculateVector(center, position, averageHalite as int)
-    }
-
-    InfluenceVector calculateVector(Position target, Position source, int halite) {
-        int dx = target.x - source.x
-        int dy = target.y - source.y
-
-//        def magnitude = Math.sqrt(dx * dx + dy * dy)
-        def magnitude = Math.abs(dx) + Math.abs(dy)
-        def haliteScaling = Math.pow(Configurables.INFLUENCE_DECAY_RATE, magnitude) * halite / magnitude
-        int xHaliteInfluence = dx * haliteScaling
-        int yHaliteInfluence = dy * haliteScaling
-        return new InfluenceVector(xHaliteInfluence, yHaliteInfluence)
+        if (FeatureFlags.getFlagStatus(game.me, "VECTOR_IN_MAP")) {
+            return InfluenceCalculator.calculateVectorInMap(game.gameMap, center, position, averageHalite as int)
+        }
+        return InfluenceCalculator.calculateVector(center, position, averageHalite as int)
     }
 }
