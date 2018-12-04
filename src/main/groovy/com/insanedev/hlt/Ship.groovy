@@ -231,43 +231,16 @@ class Ship extends Entity {
     }
 
     boolean getInspired() {
-        Flux<Position> positionsToCheck = Flux.fromStream(possibleCardinalMoves()).map({it.position})
-        int dx = 4
-        int dy = 0
-        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
-        dx = 0
-        dy = 4
-        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
-        dx = 0
-        dy = 3
-        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
-        dx = 3
-        dy = 0
-        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
-        dx = 1
-        dy = 3
-        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
-        dx = 3
-        dy = 1
-        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
-        dx = 2
-        dy = 2
-        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
-        dx = 1
-        dy = 1
-        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
-        dx = 2
-        dy = 0
-        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
-        dx = 0
-        dy = 2
-        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
-        dx = 1
-        dy = 2
-        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
-        dx = 2
-        dy = 1
-        positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
+        Flux<Position> positionsToCheck = Flux.empty()
+        for (int i = 1; i < 5; i++) {
+            int dx = i
+            int dy = 0
+            while (dx >= 0) {
+                positionsToCheck = positionsForMutations(positionsToCheck, dx, dy)
+                dx--
+                dy++
+            }
+        }
 
         long otherShips = positionsToCheck.distinct().filter({game.gameMap[it].occupied}).count().block()
         if (otherShips >= 2) {
