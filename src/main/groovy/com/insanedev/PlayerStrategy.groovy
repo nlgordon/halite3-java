@@ -141,7 +141,7 @@ class PlayerStrategy implements PlayerStrategyInterface {
                 .map({ it.calculateDistance(shipyardPosition)}))
                 .defaultIfEmpty(0)
                 .block()
-        return maxDistanceFromShipyard >= remainingTurns
+        return maxDistanceFromShipyard + 2 >= remainingTurns
     }
 
     @Override

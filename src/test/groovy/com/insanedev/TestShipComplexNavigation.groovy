@@ -181,4 +181,35 @@ class TestShipComplexNavigation extends BaseTestFakeGameEngine {
         10 | 8  | 8  | 10
         9  | 10 | 10 | 9
     }
+
+    @Unroll
+    def "When a ship is navigating from #startX,#startY to #endX,#endY with a halite at 7,7, it will avoid 7,7 and choose the zero halite cells resulting in no loss of cargo"() {
+        def myShip = engine.createShip(startX,startY, 999)
+        def destination = new Position(endX, endY)
+        myShip.destination = destination
+        game.gameMap.at(7,7).halite = 1000
+        when:
+        runTurns(4)
+        then:
+        myShip.position == destination
+        myShip.halite == 999
+
+        where:
+        startX | startY | endX | endY
+        8      | 8      | 6    | 6
+        6      | 6      | 8    | 8
+        6      | 8      | 8    | 6
+        8      | 6      | 6    | 8
+    }
+
+    def "When a ship updates, and is full, but is navigating, then it keeps it's original destination"() {
+        def myShip = engine.createShip(8,8, 0)
+        def destination = new Position(10, 8)
+        myShip.destination = destination
+        myShip.fullAmount = 1000
+        when:
+        myShip.update(myShip.position, 1000)
+        then:
+        myShip.destination == destination
+    }
 }

@@ -1,9 +1,12 @@
 package com.insanedev.hlt
 
 import com.insanedev.Configurables
+import com.insanedev.FeatureFlags
 import com.insanedev.InfluenceVector
 import groovy.transform.EqualsAndHashCode
+import javafx.geometry.Pos
 import reactor.core.publisher.Flux
+import reactor.math.MathFlux
 
 import java.util.stream.Stream
 
@@ -140,18 +143,25 @@ class Ship extends Entity {
 
         Direction direction = Direction.STILL
 
-        if (absDx >= absDy) {
-            if (dx > 0) {
-                direction = absDx < wrapped_dx ? Direction.EAST : Direction.WEST
-            } else if (dx < 0) {
-                direction = absDx < wrapped_dx ? Direction.WEST : Direction.EAST
-            }
-        } else if (absDx < absDy) {
-            if (dy > 0) {
-                direction = absDy < wrapped_dy ? Direction.SOUTH : Direction.NORTH
-            } else if (dy < 0) {
-                direction = absDy < wrapped_dy ? Direction.NORTH : Direction.SOUTH
-            }
+        List<Direction> directionList = []
+
+        if (dx > 0) {
+            directionList.add(absDx < wrapped_dx ? Direction.EAST : Direction.WEST)
+        } else if (dx < 0) {
+            directionList.add(absDx < wrapped_dx ? Direction.WEST : Direction.EAST)
+        }
+
+        if (dy > 0) {
+            directionList.add(absDy < wrapped_dy ? Direction.SOUTH : Direction.NORTH)
+        } else if (dy < 0) {
+            directionList.add(absDy < wrapped_dy ? Direction.NORTH : Direction.SOUTH)
+        }
+
+        if (directionList) {
+            return MathFlux.min(Flux.fromIterable(directionList)
+                    .map({createPossibleMove(it)}),
+                    { PossibleMove left, PossibleMove right -> left.halite.compareTo(right.halite) })
+                    .block().direction
         }
         return direction
     }
@@ -210,7 +220,7 @@ class Ship extends Entity {
 
         if (position == destination && status == ShipStatus.NAVIGATING) {
             status = ShipStatus.EXPLORING
-        } else if (full) {
+        } else if (full && status == ShipStatus.EXPLORING) {
             setDestination(game.me.shipyard.position)
         }
     }
