@@ -93,14 +93,14 @@ class Area {
             MapCell max = Flux.fromIterable(internalCells.values())
                     .sort({ MapCell left, MapCell right -> right.halite <=> left.halite })
                     .blockFirst()
-            if (FeatureFlags.getFlagStatus(game.me, "VECTOR_IN_MAP")) {
-                return InfluenceCalculator.calculateVectorInMap(game.gameMap, max.position, position, max.halite)
+            if (FeatureFlags.getFlagStatus(game.me, "UNWRAPPED_AREA_INFLUENCE")) {
+                return InfluenceCalculator.calculateVector(max.position, position, max.halite)
             }
-            return InfluenceCalculator.calculateVector(max.position, position, max.halite)
+            return InfluenceCalculator.calculateVectorWrapped(game.gameMap, max.position, position, max.halite)
         }
-        if (FeatureFlags.getFlagStatus(game.me, "VECTOR_IN_MAP")) {
-            return InfluenceCalculator.calculateVectorInMap(game.gameMap, center, position, averageHalite as int)
+        if (FeatureFlags.getFlagStatus(game.me, "UNWRAPPED_AREA_INFLUENCE")) {
+            return InfluenceCalculator.calculateVector(center, position, averageHalite as int)
         }
-        return InfluenceCalculator.calculateVector(center, position, averageHalite as int)
+        return InfluenceCalculator.calculateVectorWrapped(game.gameMap, center, position, averageHalite as int)
     }
 }

@@ -205,6 +205,28 @@ class TestPlayerStrategy extends BaseTestFakeGameEngine {
         11 | 10 | -900 | 0
     }
 
+    @Unroll
+    def "Given an area at #areaX,#areaY of 1x1 and a ship exploring at #x,#y, an area influence vector will be generated in the direction of #dir wrapping around the map due to the area influence"() {
+        def position = new Position(x, y)
+        def areaPosition = new Position(areaX, areaY)
+        strategy.areas.add(new Area(areaPosition, 1, 1, game))
+        game.gameMap[areaPosition].halite = 1000
+        def influcence = strategy.getExplorationInfluence(position)
+        expect:
+        influcence.x.compareTo(0) == xDir
+        influcence.y.compareTo(0) == yDir
+
+        where:
+        areaX | areaY | x  | y  | xDir | yDir
+        5     | 5     | 30 | 5  | 1    | 0
+        5     | 5     | 5  | 30 | 0    | 1
+        27    | 27    | 2  | 27 | -1   | 0
+        27    | 27    | 27 | 2  | 0    | -1
+//        10 | 11 | 0    | -900
+//        9  | 10 | 900  | 0
+//        11 | 10 | -900 | 0
+    }
+
     @Ignore
     @Unroll
     def "Given an area at 10,10 of 1x1 and a ship exploring at #x,#y, an area influence vector will be generated with cell influence of #i in direction #dir due to the area influence"() {

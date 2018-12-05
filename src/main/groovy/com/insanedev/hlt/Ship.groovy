@@ -225,7 +225,7 @@ class Ship extends Entity {
             status = ShipStatus.EXPLORING
         } else if (full && status == ShipStatus.EXPLORING) {
             setDestination(game.me.shipyard.position)
-        } //TODO: Need to handle when it will get overful this turn and send home
+        }
     }
 
     Stream<PossibleMove> possibleCardinalMoves() {

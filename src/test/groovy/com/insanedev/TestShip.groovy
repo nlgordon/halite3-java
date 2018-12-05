@@ -2,6 +2,7 @@ package com.insanedev
 
 import com.insanedev.fakeengine.BaseTestFakeGameEngine
 import com.insanedev.hlt.*
+import spock.lang.Ignore
 import spock.lang.Unroll
 
 class TestShip extends BaseTestFakeGameEngine {
@@ -437,4 +438,14 @@ class TestShip extends BaseTestFakeGameEngine {
         history1.position == new Position(1, 1)
     }
 
+    // This was actually a net detriment. Not entirely sure of the math, but assume it has to do with travel being more expensive than the wasted halite
+    @Ignore
+    def "When a ship has 900 halite, and on a cell that would harvest 101 halite this turn, instead navigate back to shipyard"() {
+        def position = new Position(0, 0)
+        gameMap[position].halite = 404
+        when:
+        ship.update(position, 900)
+        then:
+        ship.destination == player.shipyard.position
+    }
 }
