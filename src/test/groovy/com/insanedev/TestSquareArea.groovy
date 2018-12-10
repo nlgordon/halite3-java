@@ -9,7 +9,7 @@ import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import java.util.stream.IntStream
 
-class TestArea extends BaseTestFakeGameEngine {
+class TestSquareArea extends BaseTestFakeGameEngine {
     def setup() {
         initGame(0, 8, 16, 32, 32)
     }
@@ -17,7 +17,7 @@ class TestArea extends BaseTestFakeGameEngine {
     def "An area has a center position"() {
         def center = new Position(5, 5)
         when:
-        def area = new Area(center, 5, 7, game)
+        def area = new SquareArea(center, 5, 7, game)
         then:
         area.center == new Position(5, 5)
     }
@@ -25,7 +25,7 @@ class TestArea extends BaseTestFakeGameEngine {
     def "An area has a width"() {
         def center = new Position(5, 5)
         when:
-        def area = new Area(center, 5, 7, game)
+        def area = new SquareArea(center, 5, 7, game)
         then:
         area.width == 5
     }
@@ -33,21 +33,21 @@ class TestArea extends BaseTestFakeGameEngine {
     def "An area has a height"() {
         def center = new Position(5, 5)
         when:
-        def area = new Area(center, 5, 7, game)
+        def area = new SquareArea(center, 5, 7, game)
         then:
         area.height == 7
     }
 
     def "An area with a width of 2 throws an IllegalArgumentException"() {
         when:
-        new Area(new Position(5,5), 2, 1, game)
+        new SquareArea(new Position(5,5), 2, 1, game)
         then:
         thrown(IllegalArgumentException)
     }
 
     def "An area with a height of 2 throws an IllegalArgumentException"() {
         when:
-        new Area(new Position(5,5), 1, 2, game)
+        new SquareArea(new Position(5,5), 1, 2, game)
         then:
         thrown(IllegalArgumentException)
     }
@@ -55,7 +55,7 @@ class TestArea extends BaseTestFakeGameEngine {
     def "An area of 1x1 at location 5,5 will contain the map cell 5,5"() {
         def center = new Position(5, 5)
         when:
-        def area = new Area(center, 1, 1, game)
+        def area = new SquareArea(center, 1, 1, game)
         then:
         area.cells.filter({
             it.position == center
@@ -65,7 +65,7 @@ class TestArea extends BaseTestFakeGameEngine {
     def "An area of 3x1 at location 5,5 will contain the rectangle of cells from 4,5 to 6,5"() {
         def center = new Position(5, 5)
         when:
-        def area = new Area(center, 3, 1, game)
+        def area = new SquareArea(center, 3, 1, game)
         then:
         area.cells.filter({
             it.position.x >= 4 && it.position.x <= 6 &&
@@ -76,7 +76,7 @@ class TestArea extends BaseTestFakeGameEngine {
     def "An area of 3x5 at location 5,5 will contain the rectangle of cells from 4,3 to 6,7"() {
         def center = new Position(5, 5)
         when:
-        def area = new Area(center, 3, 5, game)
+        def area = new SquareArea(center, 3, 5, game)
         then:
         area.cells.filter({
             it.position.x >= 4 && it.position.x <= 6 &&
@@ -86,14 +86,14 @@ class TestArea extends BaseTestFakeGameEngine {
 
     def "An area of 1x1 with 0 halite reports 0 halite for total"() {
         expect:
-        new Area(new Position(5,5), 1, 1, game).halite == 0
+        new SquareArea(new Position(5,5), 1, 1, game).halite == 0
     }
 
     def "An area of 1x1 with 100 halite in that cell reports 100 halite for total"() {
         def position = new Position(5, 5)
         game.gameMap[position].halite = 100
         expect:
-        new Area(position, 1, 1, game).halite == 100
+        new SquareArea(position, 1, 1, game).halite == 100
     }
 
     def "An area of 3x3 with halite at cells of 1,2,3,4,5,6,7,8,9 reports 45"() {
@@ -106,13 +106,13 @@ class TestArea extends BaseTestFakeGameEngine {
         })
         def center = new Position(5, 5)
         expect:
-        new Area(center, 3, 3, game).halite == 45
+        new SquareArea(center, 3, 3, game).halite == 45
     }
 
     def "An area of 3x5 at 5,5 will flag the map cells as being attached to an area"() {
         def center = new Position(5, 5)
         when:
-        def area = new Area(center, 3, 5, game)
+        def area = new SquareArea(center, 3, 5, game)
         then:
         IntStream.rangeClosed(4, 6).forEach({ x ->
             IntStream.rangeClosed(3, 7).forEach({ y ->
@@ -124,7 +124,7 @@ class TestArea extends BaseTestFakeGameEngine {
 
     def "When a ship is within an area, it receives influence based on max halite for cells in the area"() {
         def center = new Position(5, 5)
-        def area = new Area(center, 5, 5, game)
+        def area = new SquareArea(center, 5, 5, game)
         game.gameMap.at(7,5).halite = 1000
 
         expect:
@@ -133,7 +133,7 @@ class TestArea extends BaseTestFakeGameEngine {
 
     def "When an area updates its status, and average is below the MIN_CELL_AMOUNT, then it removes it self from all affected cells"() {
         def center = new Position(5, 5)
-        def area = new Area(center, 1, 1, game)
+        def area = new SquareArea(center, 1, 1, game)
         game.gameMap[center].halite = Configurables.MIN_HALITE_FOR_AREA_CONSIDERATION / 2
         when:
         area.updateStatus()
@@ -143,7 +143,7 @@ class TestArea extends BaseTestFakeGameEngine {
 
     def "When an area updates its status, and average is above the MIN_CELL_AMOUNT, then it is still on all affected cells"() {
         def center = new Position(5, 5)
-        def area = new Area(center, 1, 1, game)
+        def area = new SquareArea(center, 1, 1, game)
         game.gameMap[center].halite = Configurables.MIN_HALITE_FOR_AREA_CONSIDERATION * 2
         when:
         area.updateStatus()
@@ -153,7 +153,7 @@ class TestArea extends BaseTestFakeGameEngine {
 
     def "When an area updates its status, and average is below the MIN_CELL_AMOUNT, then it reports as not active"() {
         def center = new Position(5, 5)
-        def area = new Area(center, 1, 1, game)
+        def area = new SquareArea(center, 1, 1, game)
         game.gameMap[center].halite = Configurables.MIN_HALITE_FOR_AREA_CONSIDERATION / 2
         when:
         area.updateStatus()
@@ -163,7 +163,7 @@ class TestArea extends BaseTestFakeGameEngine {
 
     def "When an area updates its status, and average is above the MIN_CELL_AMOUNT, then it reports itself as active"() {
         def center = new Position(5, 5)
-        def area = new Area(center, 1, 1, game)
+        def area = new SquareArea(center, 1, 1, game)
         game.gameMap[center].halite = Configurables.MIN_HALITE_FOR_AREA_CONSIDERATION * 2
         when:
         area.updateStatus()

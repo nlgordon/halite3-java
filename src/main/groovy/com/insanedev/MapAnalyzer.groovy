@@ -2,6 +2,7 @@ package com.insanedev
 
 import com.insanedev.hlt.Game
 import com.insanedev.hlt.GameMap
+import com.insanedev.hlt.Log
 import com.insanedev.hlt.MapCell
 import com.insanedev.hlt.Position
 import reactor.core.publisher.Flux
@@ -19,7 +20,7 @@ class MapAnalyzer {
         searchDistance = map.width / Configurables.AREA_SEARCH_DISTANCE_RATIO
     }
 
-    List<Area> generateAreas() {
+    List<SquareArea> generateAreas() {
         int averageHaliteInCells = getAverageHalitePerCell()
         return Flux.fromStream(map.streamCells())
                 .filter({ it.halite > averageHaliteInCells * Configurables.AREA_AVERAGE_MULTIPLIER })
@@ -30,7 +31,21 @@ class MapAnalyzer {
             def minHaliteForArea = getMinHaliteForArea(position)
             def width = getAreaWidth(position, minHaliteForArea)
             def height = getAreaHeight(position, minHaliteForArea)
-            Mono.zip(width, height).map({new Area(position, (int)it.t1, (int)it.t2, game)})
+            Mono.zip(width, height).map({new SquareArea(position, (int)it.t1, (int)it.t2, game)})
+        }).collectList().block()
+    }
+
+    List<Area> generateAmorphousAreas() {
+        int averageHaliteInCells = getAverageHalitePerCell()
+        Log.log("Average halite per cell: $averageHaliteInCells")
+        return Flux.fromStream(map.streamCells())
+                .filter({ it.halite > averageHaliteInCells * 2 })
+                .sort(MapCell.haliteReverseComparator)
+                .filter({ it.area == null })
+                .map({
+            def position = it.position
+            def minHaliteForArea = getMinHaliteForArea(position)
+            return AmorphousArea.generate(it.position, minHaliteForArea, game)
         }).collectList().block()
     }
 
@@ -47,6 +62,9 @@ class MapAnalyzer {
     }
 
     int getMinHaliteForArea(Position position) {
+        if (FeatureFlags.getFlagStatus("AMORPHOUS_AREAS")) {
+            return map[position].halite * 0.5
+        }
         return map[position].halite * Configurables.AREA_MINIMUM_SCALE
     }
 

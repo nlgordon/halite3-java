@@ -163,7 +163,7 @@ class TestPlayerStrategy extends BaseTestFakeGameEngine {
         def position = new Position(x, y)
 
         def areaPosition = new Position(10, 10)
-        strategy.areas.add(new Area(areaPosition, 1, 1, game))
+        strategy.areas.add(new SquareArea(areaPosition, 1, 1, game))
         game.gameMap[areaPosition].halite = 1000
         expect:
         strategy.getExplorationInfluence(position).direction == dir
@@ -190,7 +190,7 @@ class TestPlayerStrategy extends BaseTestFakeGameEngine {
     def "Given an area at 10,10 of 1x1 and a ship exploring at #x,#y, an area influence vector will be generated of #ix,#iy due to the area influence"() {
         def position = new Position(x, y)
         def areaPosition = new Position(10, 10)
-        strategy.areas.add(new Area(areaPosition, 1, 1, game))
+        strategy.areas.add(new SquareArea(areaPosition, 1, 1, game))
         game.gameMap[areaPosition].halite = 1000
         def influcence = strategy.getExplorationInfluence(position)
         expect:
@@ -209,7 +209,7 @@ class TestPlayerStrategy extends BaseTestFakeGameEngine {
     def "Given an area at #areaX,#areaY of 1x1 and a ship exploring at #x,#y, an area influence vector will be generated in the direction of #dir wrapping around the map due to the area influence"() {
         def position = new Position(x, y)
         def areaPosition = new Position(areaX, areaY)
-        strategy.areas.add(new Area(areaPosition, 1, 1, game))
+        strategy.areas.add(new SquareArea(areaPosition, 1, 1, game))
         game.gameMap[areaPosition].halite = 1000
         def influcence = strategy.getExplorationInfluence(position)
         expect:
@@ -232,7 +232,7 @@ class TestPlayerStrategy extends BaseTestFakeGameEngine {
     def "Given an area at 10,10 of 1x1 and a ship exploring at #x,#y, an area influence vector will be generated with cell influence of #i in direction #dir due to the area influence"() {
         def position = new Position(x, y)
         def areaPosition = new Position(10, 10)
-        strategy.areas.add(new Area(areaPosition, 1, 1, game))
+        strategy.areas.add(new SquareArea(areaPosition, 1, 1, game))
         game.gameMap[areaPosition].halite = 100
         def influcence = strategy.getExplorationInfluence(position)
         expect:
@@ -263,10 +263,10 @@ class TestPlayerStrategy extends BaseTestFakeGameEngine {
     def "Given an area at 12,10 and 8,10 of 1x1 and a ship exploring at #x,#y, an area influence vector will be generated with cell influence of #i in direction #dir due to the area influence"() {
         def position = new Position(x, y)
         def areaPosition1 = new Position(12, 10)
-        strategy.areas.add(new Area(areaPosition1, 1, 1, game))
+        strategy.areas.add(new SquareArea(areaPosition1, 1, 1, game))
         game.gameMap[areaPosition1].halite = 100
         def areaPosition2 = new Position(8, 10)
-        strategy.areas.add(new Area(areaPosition2, 1, 1, game))
+        strategy.areas.add(new SquareArea(areaPosition2, 1, 1, game))
         game.gameMap[areaPosition2].halite = 100
         def influcence = strategy.getExplorationInfluence(position)
         expect:
@@ -298,6 +298,7 @@ class TestPlayerStrategy extends BaseTestFakeGameEngine {
 
 
     void assertAreaMatches(Area area, int width, int height, Position position) {
+        area = area as SquareArea
         assert area.width == width
         assert area.height == height
         assert area.center == position

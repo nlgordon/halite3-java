@@ -32,6 +32,8 @@ class PlayerStrategy implements PlayerStrategyInterface {
         def start = LocalTime.now()
         game = engine.init()
         me = game.me
+        FeatureFlags.setPlayer(me)
+        Log.log("Running with flags: ${FeatureFlags.getFlags()}")
         me.strategy = this
         gameMap = game.gameMap
         // At this point "game" variable is populated with initial map data.
@@ -46,9 +48,13 @@ class PlayerStrategy implements PlayerStrategyInterface {
     void analyzeMap() {
         def start = LocalTime.now()
         MapAnalyzer analyzer = new MapAnalyzer(game)
-        areas = analyzer.generateAreas()
+        if (FeatureFlags.getFlagStatus("AMORPHOUS_AREAS")) {
+            areas = analyzer.generateAmorphousAreas()
+        } else {
+            areas = analyzer.generateAreas()
+        }
 
-        Flux.fromIterable(areas).subscribe({ Log.log("Area: $it.center $it.width:$it.height $it.averageHalite") })
+        Flux.fromIterable(areas).subscribe({ Log.log("Area: $it") })
         def duration = ChronoUnit.MILLIS.between(start, LocalTime.now())
         Log.log("Map analysis duration: $duration")
     }

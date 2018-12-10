@@ -1,5 +1,6 @@
 package com.insanedev.hlt
 
+import com.insanedev.FeatureFlags
 import com.insanedev.InfluenceVector
 import com.insanedev.PlayerStrategyInterface
 import com.insanedev.hlt.engine.PlayerUpdate
@@ -133,7 +134,8 @@ class Player {
     List<MoveCommand> executeHardMoves(List<PossibleMove> desiredMoves) {
         Map<Ship, PossibleMove> coordinatingMoves = possibleMovesToMapByShip(desiredMoves)
         return coordinatingMoves.values().collect().stream()
-                .filter({ coordinatingMoves.containsKey(it.ship) }).flatMap({
+                .filter({ coordinatingMoves.containsKey(it.ship) })
+                .flatMap({
             List<PossibleMove> chainOfMoves = chainRequiredMoves([], coordinatingMoves, it, it.ship)
             Log.log("Hard move: ${it}")
             if (chainOfMoves) {
@@ -141,6 +143,10 @@ class Player {
                 chainOfMoves.stream().forEach({ coordinatingMoves.remove(it.ship) })
                 return chainOfMoves.stream().map({ it.executeMove() })
             } else {
+                if (FeatureFlags.getFlagStatus("NO_ALTERNATES") && it.mapCell.isOccupiedFriendly(this)) {
+                    Log.log("No alternate allowed for ${it.ship.id}")
+                    return Stream.of(it.ship.createPossibleMove(Direction.STILL).executeMove())
+                }
                 Log.log("Finding alternate route for ${it.ship.id}")
                 return Stream.of(it.getAlternateRoute().executeMove())
             }

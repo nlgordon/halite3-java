@@ -9,18 +9,77 @@ import reactor.math.MathFlux
 
 import java.util.stream.IntStream
 
+abstract class Area {
+    protected Map<Position, MapCell> internalCells = [:]
+    protected Game game
+    protected BigDecimal cachedAverageHalite
+    private minHaliteForAreaConsideration
+    boolean status = true
+
+    Area(Game game) {
+        this.game = game
+        minHaliteForAreaConsideration = Configurables.MIN_HALITE_FOR_AREA_CONSIDERATION
+        if (FeatureFlags.getFlagStatus(game.me, "AREA_LOW_HALITE")) {
+            minHaliteForAreaConsideration = minHaliteForAreaConsideration / 2
+        }
+    }
+
+    abstract Position getCenter()
+
+    Flux<MapCell> getCells() {
+        return Flux.fromIterable(internalCells.values())
+    }
+
+    Flux<Position> getPositions() {
+        return Flux.fromIterable(internalCells.keySet())
+    }
+
+    int getHalite() {
+        return MathFlux.sumInt(getCells().map({ it.halite })).block()
+    }
+
+    BigDecimal getAverageHalite() {
+        if (cachedAverageHalite == null) {
+            computeAverageHalite()
+        }
+        return cachedAverageHalite
+    }
+
+    void computeAverageHalite() {
+        cachedAverageHalite = MathFlux.averageDouble(getCells().map({ it.halite })).block()
+    }
+
+    void updateStatus() {
+        computeAverageHalite()
+        cachedAverageHalite = averageHalite
+        if (averageHalite <= this.minHaliteForAreaConsideration) {
+            getCells().subscribe({ it.area = null })
+            status = false
+        }
+    }
+
+    InfluenceVector getVectorForPosition(Position position) {
+        if (internalCells.containsKey(position)) {
+            // Get cell with max halite, influence that direction
+            MapCell max = MathFlux.max(Flux.fromIterable(internalCells.values()), MapCell.haliteComparator).block()
+            return InfluenceCalculator.calculateVectorWrapped(game.gameMap, max.position, position, max.halite)
+        }
+        return InfluenceCalculator.calculateVectorWrapped(game.gameMap, center, position, averageHalite as int)
+    }
+
+    void claimCells() {
+        getCells().subscribe({it.area = this})
+    }
+}
+
 @EqualsAndHashCode(includes = ["center", "width", "height"])
-class Area {
+class SquareArea extends Area {
     Position center
     int width
     int height
-    Game game
-    private Map<Position, MapCell> internalCells = [:]
-    boolean status = true
-    BigDecimal cachedAverageHalite
-    private minHaliteForAreaConsideration
 
-    Area(Position center, int width, int height, Game game) {
+    SquareArea(Position center, int width, int height, Game game) {
+        super(game)
         if (width % 2 != 1) {
             throw new IllegalArgumentException("Width must be odd, was $width")
         }
@@ -30,13 +89,9 @@ class Area {
         this.center = center
         this.width = width
         this.height = height
-        this.game = game
 
         collectCoveredCells()
-        minHaliteForAreaConsideration = Configurables.MIN_HALITE_FOR_AREA_CONSIDERATION
-        if (FeatureFlags.getFlagStatus(game.me, "AREA_LOW_HALITE")) {
-            minHaliteForAreaConsideration = minHaliteForAreaConsideration / 2
-        }
+        claimCells()
     }
 
     void collectCoveredCells() {
@@ -54,53 +109,49 @@ class Area {
                 def cell = game.gameMap[position]
 
                 internalCells[position] = cell
-                cell.area = this
             })
         })
     }
 
-    Flux<MapCell> getCells() {
-        return Flux.fromIterable(internalCells.values())
+    String toString() {
+        return "SquareArea: $center $width:$height $averageHalite"
     }
+}
 
-    int getHalite() {
-        return MathFlux.sumInt(getCells().map({ it.halite })).block()
-    }
+class AmorphousArea extends Area {
 
-    BigDecimal getAverageHalite() {
-        if (cachedAverageHalite == null) {
-            computeAverageHalite()
+    Game game
+
+    static AmorphousArea generate(Position start, int minHalite, Game game) {
+        def cells = []
+        def cellsToSearchAround = new HashSet<MapCell>()
+        cellsToSearchAround << game.gameMap[start]
+
+        while (cellsToSearchAround) {
+            cellsToSearchAround = Flux.fromIterable(cellsToSearchAround).flatMap({
+                if (it.halite > minHalite && !it.area) {
+                    cells << it
+                    return Flux.just(it.south, it.north, it.east, it.west)
+                }
+                return Flux.empty()
+            }).filter({!cells.contains(it)}).distinct().collectList().block()
         }
-        return cachedAverageHalite
+        return new AmorphousArea(cells, game)
     }
 
-    private void computeAverageHalite() {
-        cachedAverageHalite = MathFlux.averageDouble(getCells().map({ it.halite })).block()
+    AmorphousArea(List<MapCell> cells, Game game) {
+        super(game)
+        internalCells = Flux.fromIterable(cells).collectMap({it.position}).block()
+        claimCells()
     }
 
-    void updateStatus() {
-        computeAverageHalite()
-        cachedAverageHalite = averageHalite
-        if (averageHalite <= this.minHaliteForAreaConsideration) {
-            getCells().subscribe({ it.area = null })
-            status = false
-        }
+    @Override
+    Position getCenter() {
+        return MathFlux.max(getCells(), MapCell.haliteComparator).block().position
     }
 
-    InfluenceVector getVectorForPosition(Position position) {
-        if (internalCells.containsKey(position)) {
-            // Get cell with max halite, influence that direction
-            MapCell max = Flux.fromIterable(internalCells.values())
-                    .sort({ MapCell left, MapCell right -> right.halite <=> left.halite })
-                    .blockFirst()
-            if (FeatureFlags.getFlagStatus(game.me, "UNWRAPPED_AREA_INFLUENCE")) {
-                return InfluenceCalculator.calculateVector(max.position, position, max.halite)
-            }
-            return InfluenceCalculator.calculateVectorWrapped(game.gameMap, max.position, position, max.halite)
-        }
-        if (FeatureFlags.getFlagStatus(game.me, "UNWRAPPED_AREA_INFLUENCE")) {
-            return InfluenceCalculator.calculateVector(center, position, averageHalite as int)
-        }
-        return InfluenceCalculator.calculateVectorWrapped(game.gameMap, center, position, averageHalite as int)
+    String toString() {
+        def cells = internalCells.values().size()
+        return "AmorphousArea $cells $averageHalite"
     }
 }

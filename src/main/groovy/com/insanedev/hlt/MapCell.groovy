@@ -3,6 +3,8 @@ package com.insanedev.hlt
 import com.insanedev.Area
 
 class MapCell {
+    static final Closure<Integer> haliteComparator = { MapCell left, MapCell right -> left.halite <=> right.halite }
+    static final Closure<Integer> haliteReverseComparator = { MapCell left, MapCell right -> right.halite <=> left.halite }
     final Position position
     int halite
     Ship ship
@@ -30,6 +32,13 @@ class MapCell {
         return ship != null
     }
 
+    boolean isOccupiedFriendly(Player player) {
+        if (occupiedOverride != null) {
+            return occupiedOverride
+        }
+        return !(ship?.player == player)
+    }
+
     boolean isNearOpponent(Player friendly) {
         if (north.occupied && north.ship.player != friendly) {
             return true
@@ -53,6 +62,6 @@ class MapCell {
     }
 
     String toString() {
-        return "$position $occupied"
+        return "$position $occupied $halite"
     }
 }
