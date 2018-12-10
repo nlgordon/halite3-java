@@ -1,11 +1,11 @@
 .gradle
 .idea
-/build/
+build/
 /Java/
 *.log
 *.hlt
 /halite3-java.iml
 .DS_Store
-/out/
+out/
 
 !replays/.keep

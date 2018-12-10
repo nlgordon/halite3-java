@@ -1,7 +1,37 @@
-
 plugins {
-	id 'groovy'
-	id "io.spring.dependency-management" version "1.0.6.RELEASE"
+    id "io.spring.dependency-management" version "1.0.6.RELEASE" apply false
+}
+
+allprojects {
+    apply plugin: 'groovy'
+    apply plugin: "io.spring.dependency-management"
+
+    repositories {
+        jcenter()
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom "io.projectreactor:reactor-bom:Bismuth-RELEASE"
+        }
+    }
+
+    dependencies {
+        compile 'io.projectreactor:reactor-core'
+        compile 'io.projectreactor.addons:reactor-extra'
+        compile 'org.codehaus.groovy:groovy-all:2.5.3'
+        testCompile 'org.spockframework:spock-core:1.2-groovy-2.5'
+    }
+}
+project(":simulator") {
+    jar {
+        manifest {
+            attributes 'Main-Class': 'com.insanedev.SimulationRunner'
+        }
+        from {
+            configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+        }
+    }
 }
 
 jar {
@@ -13,28 +43,11 @@ jar {
     }
 }
 
-repositories {
-	jcenter()
-}
-
-dependencyManagement {
-    imports {
-        mavenBom "io.projectreactor:reactor-bom:Bismuth-RELEASE"
-    }
-}
-
-dependencies {
-    compile 'io.projectreactor:reactor-core'
-    compile 'io.projectreactor.addons:reactor-extra'
-    compile 'org.codehaus.groovy:groovy-all:2.5.3'
-    testCompile 'org.spockframework:spock-core:1.2-groovy-2.5'
+wrapper {
+    gradleVersion = '4.9'
 }
 
 task buildZip(type: Zip) {
     from jar
     rename '.*.jar', 'MyBot.jar'
-}
-
-task wrapper(type: Wrapper) {
-	gradleVersion = '4.9'
 }
