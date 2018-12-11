@@ -16,9 +16,11 @@ class FeatureFlags {
 //                    "NO_ALTERNATES"
             ],
             1: [
-                    "AMORPHOUS_AREAS"
+//                    "AMORPHOUS_AREAS"
 //                    "SIMPLE_NAVIGATION"
 //                    "UNWRAPPED_AREA_INFLUENCE"
+//                    "ONE_AREA_INFLUENCE",
+//                    "NO_MAGNITUDE_REDUCTION"
             ]
     ]
 

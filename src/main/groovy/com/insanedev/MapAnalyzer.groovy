@@ -62,9 +62,6 @@ class MapAnalyzer {
     }
 
     int getMinHaliteForArea(Position position) {
-        if (FeatureFlags.getFlagStatus("AMORPHOUS_AREAS")) {
-            return map[position].halite * 0.5
-        }
         return map[position].halite * Configurables.AREA_MINIMUM_SCALE
     }
 

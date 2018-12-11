@@ -51,7 +51,6 @@ abstract class Area {
 
     void updateStatus() {
         computeAverageHalite()
-        cachedAverageHalite = averageHalite
         if (averageHalite <= this.minHaliteForAreaConsideration) {
             getCells().subscribe({ it.area = null })
             status = false
@@ -119,8 +118,8 @@ class SquareArea extends Area {
 }
 
 class AmorphousArea extends Area {
-
     Game game
+    private Position cachedCenter
 
     static AmorphousArea generate(Position start, int minHalite, Game game) {
         def cells = []
@@ -147,11 +146,24 @@ class AmorphousArea extends Area {
 
     @Override
     Position getCenter() {
-        return MathFlux.max(getCells(), MapCell.haliteComparator).block().position
+        if (cachedCenter) {
+            return cachedCenter
+        }
+        return computeCenter()
+    }
+
+    private Position computeCenter() {
+        return cachedCenter = MathFlux.max(getCells(), MapCell.haliteComparator).block().position
     }
 
     String toString() {
         def cells = internalCells.values().size()
         return "AmorphousArea $cells $averageHalite"
+    }
+
+    @Override
+    void updateStatus() {
+        super.updateStatus()
+        computeCenter()
     }
 }

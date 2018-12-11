@@ -31,7 +31,12 @@ class InfluenceCalculator {
             return InfluenceVector.ZERO
         }
 
-        def haliteScaling = decayByDistance[magnitude] * halite / magnitude
+        def haliteScaling
+        if (FeatureFlags.getFlagStatus("NO_MAGNITUDE_REDUCTION")) {
+            haliteScaling = decayByDistance[magnitude] * halite
+        } else {
+            haliteScaling = decayByDistance[magnitude] * halite / magnitude
+        }
         int xHaliteInfluence = (int)(actualDx * haliteScaling)
         int yHaliteInfluence = (int)(actualDy * haliteScaling)
         return new InfluenceVector(xHaliteInfluence, yHaliteInfluence)

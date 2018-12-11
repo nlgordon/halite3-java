@@ -60,8 +60,8 @@ class SimulationRunner {
             simulationResultsBySize[dimension] = simulationResult
         }
 
-        Flux.fromIterable(simulationResultsBySize.keySet()).sort({SimulationResult left, SimulationResult right ->
-            left.dimension <=> right.dimension
+        Flux.fromIterable(simulationResultsBySize.keySet()).sort({Integer left, Integer right ->
+            left <=> right
         }).subscribe({
             def result = simulationResultsBySize[it]
             println(result)

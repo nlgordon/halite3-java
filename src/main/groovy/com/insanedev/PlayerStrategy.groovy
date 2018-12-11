@@ -48,11 +48,7 @@ class PlayerStrategy implements PlayerStrategyInterface {
     void analyzeMap() {
         def start = LocalTime.now()
         MapAnalyzer analyzer = new MapAnalyzer(game)
-        if (FeatureFlags.getFlagStatus("AMORPHOUS_AREAS")) {
-            areas = analyzer.generateAmorphousAreas()
-        } else {
-            areas = analyzer.generateAreas()
-        }
+        areas = analyzer.generateAmorphousAreas()
 
         Flux.fromIterable(areas).subscribe({ Log.log("Area: $it") })
         def duration = ChronoUnit.MILLIS.between(start, LocalTime.now())
@@ -152,6 +148,16 @@ class PlayerStrategy implements PlayerStrategyInterface {
 
     @Override
     InfluenceVector getExplorationInfluence(Position position) {
+        if (FeatureFlags.getFlagStatus("ONE_AREA_INFLUENCE")) {
+            return Flux.fromIterable(areas)
+                    .filter({it.status })
+                    .sort({Area left, Area right ->
+                gameMap.calculateDistance(left.center, position) <=> gameMap.calculateDistance(right.center, position)
+            })
+                    .map({ it.getVectorForPosition(position) })
+                    .defaultIfEmpty(InfluenceVector.ZERO)
+                    .blockFirst()
+        }
         return Flux.fromIterable(areas)
                 .filter({it.status })
                 .map({ it.getVectorForPosition(position) })
