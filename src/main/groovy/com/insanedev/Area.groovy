@@ -1,6 +1,7 @@
 package com.insanedev
 
 import com.insanedev.hlt.Game
+import com.insanedev.hlt.Log
 import com.insanedev.hlt.MapCell
 import com.insanedev.hlt.Position
 import groovy.transform.EqualsAndHashCode
@@ -63,7 +64,9 @@ abstract class Area {
             MapCell max = MathFlux.max(Flux.fromIterable(internalCells.values()), MapCell.haliteComparator).block()
             return InfluenceCalculator.calculateVectorWrapped(game.gameMap, max.position, position, max.halite)
         }
-        return InfluenceCalculator.calculateVectorWrapped(game.gameMap, center, position, averageHalite as int)
+        def influenceVector = InfluenceCalculator.calculateVectorWrapped(game.gameMap, center, position, averageHalite as int)
+        Log.log("Calculating influence for area at $center for position $position $influenceVector")
+        return influenceVector
     }
 
     void claimCells() {

@@ -4,7 +4,6 @@ import com.insanedev.fakeengine.BaseTestFakeGameEngine
 import com.insanedev.hlt.Direction
 import com.insanedev.hlt.Position
 import com.insanedev.hlt.Ship
-import com.insanedev.hlt.ShipStatus
 import spock.lang.Unroll
 
 import java.util.stream.IntStream
@@ -27,8 +26,8 @@ class TestShipComplexNavigation extends BaseTestFakeGameEngine {
         def shipOne = engine.createShip(shipOneStart, 0)
         def shipTwo = engine.createShip(shipTwoStart, 0)
 
-        shipOne.destination = shipTwoStart
-        shipTwo.destination = shipOneStart
+        shipOne.navigationDestination = shipTwoStart
+        shipTwo.navigationDestination = shipOneStart
 
         when:
         runTurns(3)
@@ -43,8 +42,8 @@ class TestShipComplexNavigation extends BaseTestFakeGameEngine {
         def shipOne = engine.createShip(0, 0, 0)
         def shipTwo = engine.createShip(1,1, 0)
 
-        shipOne.destination = destination
-        shipTwo.destination = destination
+        shipOne.navigationDestination = destination
+        shipTwo.navigationDestination = destination
 
         when:
         runTurns(1)
@@ -63,10 +62,10 @@ class TestShipComplexNavigation extends BaseTestFakeGameEngine {
         def haliteLocation = new Position(2, 0)
         game.gameMap[haliteLocation].halite = 1000
 
-        shipOne.destination = destination
-        shipTwo.destination = destination
+        shipOne.navigationDestination = destination
+        shipTwo.navigationDestination = destination
 
-        shipThree.destination = haliteLocation
+        shipThree.navigationDestination = haliteLocation
 
         when:
         runTurns(1)
@@ -87,10 +86,10 @@ class TestShipComplexNavigation extends BaseTestFakeGameEngine {
         def ship3 = engine.createShip(ship3Start, 0)
         def ship4 = engine.createShip(ship4Start, 0)
 
-        ship1.destination = ship2Start
-        ship2.destination = ship3Start
-        ship3.destination = ship4Start
-        ship4.destination = ship1Start
+        ship1.navigationDestination = ship2Start
+        ship2.navigationDestination = ship3Start
+        ship3.navigationDestination = ship4Start
+        ship4.navigationDestination = ship1Start
 
         when:
         runTurns(1)
@@ -106,7 +105,7 @@ class TestShipComplexNavigation extends BaseTestFakeGameEngine {
         def ship = engine.createShip(0, 1, 0)
         setupShipForNavigation(ship.id.id, 2, 1)
         def obstacle = engine.createShip(1, 1, 0)
-        obstacle.status = ShipStatus.HOLDING
+        obstacle.mission = new HoldMission(obstacle, obstacle.position)
 
         when:
         runTurns(4)
@@ -127,7 +126,7 @@ class TestShipComplexNavigation extends BaseTestFakeGameEngine {
         List<Ship> ships = startPositions.stream()
                 .map({
             def ship = engine.createShip(it, 0)
-            ship.destination = destination
+            ship.navigationDestination = destination
             return ship
         }).collect()
 
@@ -144,8 +143,8 @@ class TestShipComplexNavigation extends BaseTestFakeGameEngine {
     def "When a ship at 8,8 has an opponent ship at 9,9, it won't navigate through 8,9 on the way to 8,10"() {
         def myShip = engine.createShipForPlayer(0, 8,8, 0)
         def opponentShip = engine.createShipForPlayer(1, 9,9, 0)
-        opponentShip.status = ShipStatus.HOLDING
-        myShip.destination = new Position(8,10)
+        opponentShip.mission = new HoldMission(opponentShip, opponentShip.position)
+        myShip.navigationDestination = new Position(8,10)
         when:
         runTurns(1)
         then:
@@ -186,7 +185,7 @@ class TestShipComplexNavigation extends BaseTestFakeGameEngine {
     def "When a ship is navigating from #startX,#startY to #endX,#endY with a halite at 7,7, it will avoid 7,7 and choose the zero halite cells resulting in no loss of cargo"() {
         def myShip = engine.createShip(startX,startY, 999)
         def destination = new Position(endX, endY)
-        myShip.destination = destination
+        myShip.navigationDestination = destination
         game.gameMap.at(7,7).halite = 1000
         when:
         runTurns(4)
@@ -205,7 +204,7 @@ class TestShipComplexNavigation extends BaseTestFakeGameEngine {
     def "When a ship updates, and is full, but is navigating, then it keeps it's original destination"() {
         def myShip = engine.createShip(8,8, 0)
         def destination = new Position(10, 8)
-        myShip.destination = destination
+        myShip.navigationDestination = destination
         myShip.fullAmount = 1000
         when:
         myShip.update(myShip.position, 1000)

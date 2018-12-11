@@ -66,7 +66,7 @@ class PlayerStrategy implements PlayerStrategyInterface {
             Flux.fromIterable(game.players)
                     .filter({ it.id != me.id })
                     .filter({
-                !Flux.fromIterable(attackShips).filter({ Ship ship -> ship.destination == it.shipyard.position }).blockFirst()
+                !Flux.fromIterable(attackShips).filter({ Ship ship -> ship.mission.destination == it.shipyard.position }).blockFirst()
             })
                     .subscribe({
                 Log.log("Need to attack $it.id")
@@ -77,14 +77,10 @@ class PlayerStrategy implements PlayerStrategyInterface {
                         .blockFirst()
                 if (ship) {
                     Log.log("Assigning $ship.id to attack player $it.id at $it.shipyard.position")
-                    ship.destination = it.shipyard.position
+                    ship.mission = new HoldMission(ship, it.shipyard.position)
                     attackShips.add(ship)
                 }
             })
-
-            Flux.fromIterable(attackShips)
-                    .filter({ it.position == it.destination && it.status != ShipStatus.HOLDING })
-                    .subscribe({ it.status = ShipStatus.HOLDING })
         }
     }
 

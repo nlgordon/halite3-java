@@ -72,7 +72,7 @@ class BaseTestFakeGameEngine extends Specification {
     Ship setupShipForNavigation(int shipId, int x, int y) {
         def ship = getShip(shipId)
         def destination = new Position(x, y)
-        ship.destination = destination
+        ship.navigationDestination = destination
         return ship
     }
 }

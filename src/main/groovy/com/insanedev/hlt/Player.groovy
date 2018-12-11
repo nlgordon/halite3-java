@@ -1,5 +1,6 @@
 package com.insanedev.hlt
 
+import com.insanedev.DropOffMission
 import com.insanedev.FeatureFlags
 import com.insanedev.InfluenceVector
 import com.insanedev.PlayerStrategyInterface
@@ -70,7 +71,7 @@ class Player {
     List<MoveCommand> navigateShips() {
         //logActiveShips()
         if (strategy && strategy.shouldDoRollup()) {
-            activeShips.forEach({ it.destination = shipyard.position })
+            activeShips.forEach({ it.mission = new DropOffMission(it) })
             game.gameMap[shipyard].occupiedOverride = false
         }
         List<MoveCommand> executedCommands = []
@@ -115,7 +116,7 @@ class Player {
 
     List<PossibleMove> collectDesiredMoves() {
         return getActiveShips()
-                .map({ it.getDesiredMove(getInfluence(it)) })
+                .map({ it.getDesiredMove() })
                 .collect(Collectors.toList())
     }
 
@@ -194,9 +195,6 @@ class Player {
                 mapCell.occupiedOverride = false
             } else {
                 mapCell.occupiedOverride = null
-                if (mapCell?.ship?.player == this && mapCell.ship.status == ShipStatus.HOLDING) {
-                    mapCell.ship.status = ShipStatus.EXPLORING
-                }
             }
         })
     }

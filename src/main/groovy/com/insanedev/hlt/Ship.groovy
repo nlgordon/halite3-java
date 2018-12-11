@@ -1,17 +1,8 @@
 package com.insanedev.hlt
 
-import com.insanedev.Configurables
-import com.insanedev.FeatureFlags
-import com.insanedev.InfluenceVector
+import com.insanedev.*
 import groovy.transform.EqualsAndHashCode
 import reactor.core.publisher.Flux
-import reactor.math.MathFlux
-
-import java.util.stream.Stream
-
-enum ShipStatus {
-    EXPLORING, NAVIGATING, HOLDING
-}
 
 @EqualsAndHashCode(callSuper = true)
 class Ship extends Entity {
@@ -19,11 +10,11 @@ class Ship extends Entity {
     boolean destroyed
     final Game game
     Position destination
-    ShipStatus status = ShipStatus.EXPLORING
     int minCellAmount = Configurables.MIN_CELL_AMOUNT
     int fullAmount = Constants.MAX_HALITE
     Position positionMovingTo
     List<ShipHistory> history = []
+    Mission mission
 
     Ship(Game game, final Player player, final EntityId id, final Position position, final int halite) {
         super(player, id, position)
@@ -33,6 +24,8 @@ class Ship extends Entity {
         if (FeatureFlags.getFlagStatus(player, "LOWER_MIN_CELL_AMOUNT")) {
             minCellAmount = minCellAmount / 2
         }
+
+        this.mission = new ExplorationMission(this)
     }
 
     boolean isFull() {
@@ -59,41 +52,16 @@ class Ship extends Entity {
         return Command.move(id, direction)
     }
 
-    void setDestination(Position position) {
-        this.destination = position
-        this.status = ShipStatus.NAVIGATING
-    }
-
-    PossibleMove getDesiredMove(InfluenceVector influence) {
-        assertActive()
-        PossibleMove desiredMove
-        if (status == ShipStatus.NAVIGATING) {
-            desiredMove = getDesiredNavigationMove()
-        } else if (status == ShipStatus.EXPLORING) {
-            desiredMove = getExplorationMove(influence)
-        } else {
-            desiredMove = createPossibleMove(Direction.STILL)
-        }
-        return desiredMove
+    void setNavigationDestination(Position position) {
+        this.mission = new NavigationMission(this, position)
     }
 
     PossibleMove getDesiredMove() {
-        return getDesiredMove(InfluenceVector.ZERO)
-    }
-
-    PossibleMove getExplorationMove(InfluenceVector influence) {
-        def currentCellHalite = game.gameMap[position].halite
-        if (currentCellHalite >= minCellAmount || !hasHaliteToMove()) {
-            return createPossibleMove(Direction.STILL)
+        assertActive()
+        if (mission) {
+            return mission.desiredMove
         }
-        return possibleCardinalMoves()
-        // TODO: Move this up a step
-                .map({ it.influence = influence; it })
-                .filter({ it.halite > currentCellHalite || currentCellHalite == 0 })
-                .sorted({ PossibleMove left, PossibleMove right -> right.halite.compareTo(left.halite) })
-                .filter({ it.ableToMoveOrNavigating })
-                .findFirst()
-                .orElse(createPossibleMove(Direction.STILL))
+        return createPossibleMove(Direction.STILL)
     }
 
     PossibleMove getAlternateRoute(Direction direction) {
@@ -105,67 +73,12 @@ class Ship extends Entity {
                 .orElse(createPossibleMove(Direction.STILL))
     }
 
-    PossibleMove getDesiredNavigationMove() {
-        return createPossibleMove(getNavigationDirection())
-    }
-
-    Direction getNavigationDirection() {
-        Direction direction = Direction.STILL
-        if (!hasHaliteToMove()) {
-            Log.debug("Unable to move $id due to too little halite of $halite for cell ${game.gameMap[position].halite}")
-            return direction
-        }
-        if (destination) {
-            int absoluteDistance = calculateDistance(destination)
-
-            if (absoluteDistance == 0) {
-                direction = Direction.STILL
-            } else {
-                direction = getDesiredNavigationDirection()
-            }
-        }
-        return direction
-    }
-
     boolean hasHaliteToMove() {
         return halite >= (game.gameMap[position].halite * 0.1)
     }
 
     int calculateDistance(Position other) {
         return game.gameMap.calculateDistance(position, other)
-    }
-
-    Direction getDesiredNavigationDirection() {
-        int dx = destination.x - position.x
-        int dy = destination.y - position.y
-        int absDx = Math.abs(dx)
-        int absDy = Math.abs(dy)
-        int wrapped_dx = game.gameMap.width - absDx
-        int wrapped_dy = game.gameMap.width - absDy
-
-        Direction direction = Direction.STILL
-
-        List<Direction> directionList = []
-
-        if (dx > 0) {
-            directionList.add(absDx < wrapped_dx ? Direction.EAST : Direction.WEST)
-        } else if (dx < 0) {
-            directionList.add(absDx < wrapped_dx ? Direction.WEST : Direction.EAST)
-        }
-
-        if (dy > 0) {
-            directionList.add(absDy < wrapped_dy ? Direction.SOUTH : Direction.NORTH)
-        } else if (dy < 0) {
-            directionList.add(absDy < wrapped_dy ? Direction.NORTH : Direction.SOUTH)
-        }
-
-        if (directionList) {
-            return MathFlux.min(Flux.fromIterable(directionList)
-                    .map({ createPossibleMove(it) }),
-                    { PossibleMove left, PossibleMove right -> left.halite.compareTo(right.halite) })
-                    .block().direction
-        }
-        return direction
     }
 
     PossibleMove createPossibleMove(Direction direction) {
@@ -220,17 +133,9 @@ class Ship extends Entity {
         this.position = newPosition
         this.halite = newHalite
 
-        //TODO: Move all this logic to a navigation section instead of handling here on update
-        if (position == destination && status == ShipStatus.NAVIGATING) {
-            status = ShipStatus.EXPLORING
-        } else if (full && status == ShipStatus.EXPLORING) {
-            setDestination(game.me.shipyard.position)
+        if (mission.complete) {
+            mission = mission.nextMission
         }
-    }
-
-    Stream<PossibleMove> possibleCardinalMoves() {
-        return Direction.ALL_CARDINALS.stream()
-                .map({ createPossibleMove(it) })
     }
 
     boolean getInspired() {
@@ -258,6 +163,14 @@ class Ship extends Entity {
             position.offset(it.first * dx, it.second * dy)
         }))
         return positionsToCheck
+    }
+
+    int getHaliteAtCurrentPosition() {
+        game.gameMap[position].halite
+    }
+
+    InfluenceVector getInfluence() {
+        player.getInfluence(this)
     }
 
     String toString() {
@@ -289,7 +202,7 @@ class PossibleMove {
     }
 
     boolean isAbleToMoveOrNavigating() {
-        return ableToMove || mapCell?.ship?.status == ShipStatus.NAVIGATING
+        return ableToMove || mapCell?.ship?.player == ship.player
     }
 
     void executeIfAble() {
@@ -310,6 +223,7 @@ class PossibleMove {
         return ship.getAlternateRoute(direction)
     }
 
+    // TODO: Influence doesn't belong here
     int getHalite() {
         return mapCell.halite + influence.appliedToDirection(direction)
     }

@@ -13,7 +13,7 @@ class TestPlayer extends BaseTestFakeGameEngine {
     }
 
     def "Player will not attempt navigation on destroyed ships" () {
-        ship.destination = new Position(2,2)
+        ship.navigationDestination = new Position(2,2)
         ship.destroy()
         when:
         navigateShips()
@@ -31,12 +31,12 @@ class TestPlayer extends BaseTestFakeGameEngine {
         def ship3 = engine.createShip(ship3Start, 0)
         def ship4 = engine.createShip(ship4Start, 0)
         engine.updateShipPosition(0, 1, 2)
-        ship.destination = new Position(4, 2)
+        ship.navigationDestination = new Position(4, 2)
 
-        ship1.destination = ship2Start
-        ship2.destination = ship3Start
-        ship3.destination = ship4Start
-        ship4.destination = ship1Start
+        ship1.navigationDestination = ship2Start
+        ship2.navigationDestination = ship3Start
+        ship3.navigationDestination = ship4Start
+        ship4.navigationDestination = ship1Start
         def poolOfMoves = player.possibleMovesToMapByShip(player.collectDesiredMoves())
 
         when:

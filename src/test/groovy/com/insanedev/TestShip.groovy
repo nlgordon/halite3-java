@@ -151,7 +151,7 @@ class TestShip extends BaseTestFakeGameEngine {
 
     def "When a ship is spawned, it defaults to exploring"() {
         expect:
-        getShip(0).status == ShipStatus.EXPLORING
+        getShip(0).mission instanceof ExplorationMission
     }
 
     @Unroll
@@ -279,7 +279,7 @@ class TestShip extends BaseTestFakeGameEngine {
         engine.updateShipPosition(ship, explorerStart)
         ship.halite = 100
         def navigatingShip = engine.createShip(navigatorStart, 100)
-        navigatingShip.destination = explorerStart
+        navigatingShip.navigationDestination = explorerStart
         game.gameMap[navigatorStart].halite = 500
         when:
         navigateShips()
@@ -291,7 +291,7 @@ class TestShip extends BaseTestFakeGameEngine {
     def "When a navigating ship at 0,0 with 0 halite on board, and 100 halite in the map cell, will desire to stay still"() {
         engine.updateShipPosition(0, 0, 0)
         gameMap[new Position(0, 0)].halite = 100
-        ship.destination = new Position(1, 1)
+        ship.navigationDestination = new Position(1, 1)
         when:
         def move = ship.getDesiredMove()
         then:
@@ -331,11 +331,11 @@ class TestShip extends BaseTestFakeGameEngine {
         navigateShips()
 
         then:
-        ship.status == ShipStatus.EXPLORING
+        ship.mission instanceof ExplorationMission
     }
 
     def "When a ship status is holding, it will return a stay still move"() {
-        ship.status = ShipStatus.HOLDING
+        ship.mission = new HoldMission(ship, ship.position)
         expect:
         ship.getDesiredMove().direction == Direction.STILL
     }
@@ -378,7 +378,7 @@ class TestShip extends BaseTestFakeGameEngine {
     def "A ship that moves one cell east will have a history entry for the new position"() {
         engine.updateShipPosition(0, 0, 0)
         def destination = new Position(1, 0)
-        ship.destination = destination
+        ship.navigationDestination = destination
         when:
         navigateShips()
         def history = ship.history[2]
@@ -393,7 +393,7 @@ class TestShip extends BaseTestFakeGameEngine {
     def "A ship that moves two cells east and south will have history entries for each position"() {
         engine.updateShipPosition(0, 0, 0)
         def destination = new Position(1, 1)
-        ship.destination = destination
+        ship.navigationDestination = destination
         when:
         runTurns(2)
         def history1 = ship.history[2]
@@ -412,7 +412,7 @@ class TestShip extends BaseTestFakeGameEngine {
     def "A ship that makes a dropoff will have a history entry"() {
         engine.updateShipPosition(0, 1, 0)
         def destination = new Position(1, 1)
-        ship.destination = destination
+        ship.navigationDestination = destination
         ship.halite = 100
         when:
         runTurns(1)
@@ -427,7 +427,7 @@ class TestShip extends BaseTestFakeGameEngine {
     }
 
     def "When a ship makes no move, a still entry is recorded in history"() {
-        ship.status = ShipStatus.HOLDING
+        ship.mission = new HoldMission(ship, ship.position)
         when:
         runTurns(1)
         def history1 = ship.history[2]
