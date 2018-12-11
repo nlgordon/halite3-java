@@ -56,6 +56,10 @@ class Ship extends Entity {
         this.mission = new NavigationMission(this, position)
     }
 
+    void doDropoff() {
+        this.mission = new DropOffMission(this)
+    }
+
     PossibleMove getDesiredMove() {
         assertActive()
         if (mission) {

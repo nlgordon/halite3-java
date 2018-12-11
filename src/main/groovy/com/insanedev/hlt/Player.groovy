@@ -70,10 +70,7 @@ class Player {
 
     List<MoveCommand> navigateShips() {
         //logActiveShips()
-        if (strategy && strategy.shouldDoRollup()) {
-            activeShips.forEach({ it.mission = new DropOffMission(it) })
-            game.gameMap[shipyard].occupiedOverride = false
-        }
+        handleRollup()
         List<MoveCommand> executedCommands = []
         Tuple2<List<PossibleMove>, List<MoveCommand>> state = new Tuple2<>(collectDesiredMoves(), executedCommands)
         state = executeEasyMoves(state)
@@ -81,6 +78,13 @@ class Player {
         executedCommands.addAll(state.second)
 
         return executedCommands + executeHardMoves(state.first)
+    }
+
+    private void handleRollup() {
+        if (strategy?.shouldDoRollup()) {
+            activeShips.forEach({ it.doDropoff() })
+            game.gameMap[shipyard].occupiedOverride = false
+        }
     }
 
     Tuple2<List<PossibleMove>, List<MoveCommand>> executeEasyMoves(Tuple2<List<PossibleMove>, List<MoveCommand>> state) {
