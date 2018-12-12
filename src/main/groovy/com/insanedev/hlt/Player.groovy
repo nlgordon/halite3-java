@@ -1,9 +1,10 @@
 package com.insanedev.hlt
 
-import com.insanedev.DropOffMission
+
 import com.insanedev.FeatureFlags
 import com.insanedev.InfluenceVector
-import com.insanedev.PlayerStrategyInterface
+import com.insanedev.NullPlayerStrategy
+import com.insanedev.PlayerStrategy
 import com.insanedev.hlt.engine.PlayerUpdate
 import groovy.transform.EqualsAndHashCode
 
@@ -19,7 +20,7 @@ class Player {
     final Map<EntityId, Ship> ships = [:]
     final Map<EntityId, Dropoff> dropoffs = [:]
     Game game
-    PlayerStrategyInterface strategy
+    PlayerStrategy strategy = new NullPlayerStrategy()
 
     private Player(final PlayerId id) {
         this.id = id
@@ -81,7 +82,7 @@ class Player {
     }
 
     private void handleRollup() {
-        if (strategy?.shouldDoRollup()) {
+        if (strategy.shouldDoRollup()) {
             activeShips.forEach({ it.doDropoff() })
             game.gameMap[shipyard].occupiedOverride = false
         }
@@ -124,11 +125,9 @@ class Player {
                 .collect(Collectors.toList())
     }
 
+    // TODO: This doesn't belong here
     InfluenceVector getInfluence(Ship it) {
-        if (strategy) {
-            return strategy.getExplorationInfluence(it.position)
-        }
-        return InfluenceVector.ZERO
+        return strategy.getExplorationInfluence(it.position)
     }
 
     Stream<Ship> getActiveShips() {

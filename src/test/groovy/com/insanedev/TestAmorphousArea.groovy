@@ -4,7 +4,6 @@ import com.insanedev.fakeengine.BaseTestFakeGameEngine
 import com.insanedev.hlt.MapCell
 import com.insanedev.hlt.Position
 import reactor.core.publisher.Flux
-import spock.lang.Ignore
 
 class TestAmorphousArea extends BaseTestFakeGameEngine {
     def setup() {
@@ -159,6 +158,94 @@ class TestAmorphousArea extends BaseTestFakeGameEngine {
         then:
         def cells = areas.getPositions().collectList().block()
         assert !cells.contains(positions[3])
+    }
+
+    def "Simple influence vector for an area of 0 halite 1 x distance away is (0, 0)"() {
+        def area = new AmorphousArea([game.gameMap[new Position(5,5)]], game)
+        when:
+        def influence = area.calculateSimpleExteriorInfluence(new Position(4, 5))
+        then:
+        influence == InfluenceVector.ZERO
+    }
+
+    def "Simple influence vector for an area of 100 halite 1 x distance away is (100, 0)"() {
+        def cells = [game.gameMap[new Position(5, 5)]]
+        Flux.fromIterable(cells).subscribe({it.halite = 100})
+        def area = new AmorphousArea(cells, game)
+        when:
+        def influence = area.calculateSimpleExteriorInfluence(new Position(6, 5))
+        then:
+        influence == new InfluenceVector(100, 0)
+    }
+
+    def "Simple influence vector for an area of 100 halite -1 x distance away is (-100, 0)"() {
+        def cells = [game.gameMap[new Position(5, 5)]]
+        Flux.fromIterable(cells).subscribe({it.halite = 100})
+        def area = new AmorphousArea(cells, game)
+        when:
+        def influence = area.calculateSimpleExteriorInfluence(new Position(4, 5))
+        then:
+        influence == new InfluenceVector(-100, 0)
+    }
+
+    def "Simple influence vector for an area of 100 halite 2 x distance away is (50, 0)"() {
+        def cells = [game.gameMap[new Position(5, 5)]]
+        Flux.fromIterable(cells).subscribe({it.halite = 100})
+        def area = new AmorphousArea(cells, game)
+        when:
+        def influence = area.calculateSimpleExteriorInfluence(new Position(7, 5))
+        then:
+        influence == new InfluenceVector(50, 0)
+    }
+
+    def "Simple influence vector for an area of 100 halite 1 y distance away is (0, 100)"() {
+        def cells = [game.gameMap[new Position(5, 5)]]
+        Flux.fromIterable(cells).subscribe({it.halite = 100})
+        def area = new AmorphousArea(cells, game)
+        when:
+        def influence = area.calculateSimpleExteriorInfluence(new Position(5, 6))
+        then:
+        influence == new InfluenceVector(0, 100)
+    }
+
+    def "Simple influence vector for an area of 100 halite -1 y distance away is (0, -100)"() {
+        def cells = [game.gameMap[new Position(5, 5)]]
+        Flux.fromIterable(cells).subscribe({it.halite = 100})
+        def area = new AmorphousArea(cells, game)
+        when:
+        def influence = area.calculateSimpleExteriorInfluence(new Position(5, 4))
+        then:
+        influence == new InfluenceVector(0, -100)
+    }
+
+    def "Simple influence vector for an area of 100 halite 2 y distance away is (0, 50)"() {
+        def cells = [game.gameMap[new Position(5, 5)]]
+        Flux.fromIterable(cells).subscribe({it.halite = 100})
+        def area = new AmorphousArea(cells, game)
+        when:
+        def influence = area.calculateSimpleExteriorInfluence(new Position(5, 7))
+        then:
+        influence == new InfluenceVector(0, 50)
+    }
+
+    def "Simple influence vector for an area of 100 halite 1x 1y distance away is (25, 25)"() {
+        def cells = [game.gameMap[new Position(5, 5)]]
+        Flux.fromIterable(cells).subscribe({it.halite = 100})
+        def area = new AmorphousArea(cells, game)
+        when:
+        def influence = area.calculateSimpleExteriorInfluence(new Position(6, 6))
+        then:
+        influence == new InfluenceVector(25, 25)
+    }
+
+    def "Simple influence vector for an area of 100 halite -1x 1y distance away is (25, 25)"() {
+        def cells = [game.gameMap[new Position(5, 5)]]
+        Flux.fromIterable(cells).subscribe({it.halite = 100})
+        def area = new AmorphousArea(cells, game)
+        when:
+        def influence = area.calculateSimpleExteriorInfluence(new Position(4, 6))
+        then:
+        influence == new InfluenceVector(-25, 25)
     }
 
     private List<Position> createLineOfYPositions(int start, int count, int x) {

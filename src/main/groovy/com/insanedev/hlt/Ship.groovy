@@ -173,6 +173,7 @@ class Ship extends Entity {
         game.gameMap[position].halite
     }
 
+    // TODO: This doesn't belong here
     InfluenceVector getInfluence() {
         player.getInfluence(this)
     }

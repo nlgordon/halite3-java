@@ -7,12 +7,12 @@ import reactor.core.publisher.Flux
 import spock.lang.Ignore
 import spock.lang.Unroll
 
-class TestPlayerStrategy extends BaseTestFakeGameEngine {
-    PlayerStrategy strategy
+class TestComplexPlayerStrategy extends BaseTestFakeGameEngine {
+    ComplexPlayerStrategy strategy
 
     def setup() {
         createEngine(0, 8, 16, 32, 32)
-        strategy = new PlayerStrategy(engine)
+        strategy = new ComplexPlayerStrategy(engine)
         game = strategy.init()
         player = game.me
     }

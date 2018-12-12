@@ -1,6 +1,7 @@
 package com.insanedev
 
 import com.insanedev.hlt.Game
+import com.insanedev.hlt.GameMap
 import com.insanedev.hlt.Log
 import com.insanedev.hlt.MapCell
 import com.insanedev.hlt.Position
@@ -13,12 +14,15 @@ import java.util.stream.IntStream
 abstract class Area {
     protected Map<Position, MapCell> internalCells = [:]
     protected Game game
+    protected GameMap map
     protected BigDecimal cachedAverageHalite
+    protected Integer cachedHalite
     private minHaliteForAreaConsideration
     boolean status = true
 
     Area(Game game) {
         this.game = game
+        this.map = game.gameMap
         minHaliteForAreaConsideration = Configurables.MIN_HALITE_FOR_AREA_CONSIDERATION
         if (FeatureFlags.getFlagStatus(game.me, "AREA_LOW_HALITE")) {
             minHaliteForAreaConsideration = minHaliteForAreaConsideration / 2
@@ -36,6 +40,13 @@ abstract class Area {
     }
 
     int getHalite() {
+        if (cachedHalite == null) {
+            cachedHalite = computeHalite()
+        }
+        return cachedHalite
+    }
+
+    private int computeHalite() {
         return MathFlux.sumInt(getCells().map({ it.halite })).block()
     }
 
@@ -59,18 +70,46 @@ abstract class Area {
     }
 
     InfluenceVector getVectorForPosition(Position position) {
-        if (internalCells.containsKey(position)) {
+        if (isInArea(position)) {
             // Get cell with max halite, influence that direction
-            MapCell max = MathFlux.max(Flux.fromIterable(internalCells.values()), MapCell.haliteComparator).block()
-            return InfluenceCalculator.calculateVectorWrapped(game.gameMap, max.position, position, max.halite)
+            return getInnerAreaInfluence(position)
         }
-        def influenceVector = InfluenceCalculator.calculateVectorWrapped(game.gameMap, center, position, averageHalite as int)
+        def influenceVector = InfluenceCalculator.calculateVectorWrapped(map, center, position, averageHalite as int)
         Log.log("Calculating influence for area at $center for position $position $influenceVector")
         return influenceVector
     }
 
+    private boolean isInArea(Position position) {
+        return internalCells.containsKey(position)
+    }
+
+    private InfluenceVector getInnerAreaInfluence(Position position) {
+        MapCell max = MathFlux.max(Flux.fromIterable(internalCells.values()), MapCell.haliteComparator).block()
+        return InfluenceCalculator.calculateVectorWrapped(map, max.position, position, max.halite)
+    }
+
     void claimCells() {
         getCells().subscribe({it.area = this})
+    }
+
+    InfluenceVector calculateSimpleExteriorInfluence(Position position) {
+        //TODO: Move this check to the ship/mission instead of the area
+        if (isInArea(position)) {
+            return getInnerAreaInfluence(position)
+        }
+        if (halite) {
+            final int dy = map.calculateYDistance(center, position)
+            final int dx = map.calculateXDistance(center, position)
+            def totalDistance = Math.abs(dx) + Math.abs(dy)
+            def xRatio = dx / totalDistance
+            def yRatio = dy / totalDistance
+
+            def yInfluence = (halite / totalDistance * yRatio).toInteger()
+            def xInfluence = (halite / totalDistance * xRatio).toInteger()
+
+            return new InfluenceVector(xInfluence, yInfluence)
+        }
+        return InfluenceVector.ZERO
     }
 }
 
@@ -108,7 +147,7 @@ class SquareArea extends Area {
         IntStream.rangeClosed(left, right).forEach({ x ->
             IntStream.rangeClosed(top, bottom).forEach({ y ->
                 def position = new Position(x, y)
-                def cell = game.gameMap[position]
+                def cell = map[position]
 
                 internalCells[position] = cell
             })

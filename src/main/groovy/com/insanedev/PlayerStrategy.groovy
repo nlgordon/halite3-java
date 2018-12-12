@@ -9,14 +9,27 @@ import reactor.math.MathFlux
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 
-interface PlayerStrategyInterface {
+interface PlayerStrategy {
 
     boolean shouldDoRollup()
 
     InfluenceVector getExplorationInfluence(Position position)
 }
 
-class PlayerStrategy implements PlayerStrategyInterface {
+class NullPlayerStrategy implements PlayerStrategy {
+
+    @Override
+    boolean shouldDoRollup() {
+        return false
+    }
+
+    @Override
+    InfluenceVector getExplorationInfluence(Position position) {
+        return InfluenceVector.ZERO
+    }
+}
+
+class ComplexPlayerStrategy implements PlayerStrategy {
     GameEngine engine
     Game game
     Player me
@@ -24,7 +37,7 @@ class PlayerStrategy implements PlayerStrategyInterface {
     List<Area> areas = []
     List<Ship> attackShips = []
 
-    PlayerStrategy(GameEngine engine) {
+    ComplexPlayerStrategy(GameEngine engine) {
         this.engine = engine
     }
 
@@ -154,6 +167,15 @@ class PlayerStrategy implements PlayerStrategyInterface {
                     .defaultIfEmpty(InfluenceVector.ZERO)
                     .blockFirst()
         }
+        if (FeatureFlags.getFlagStatus("SIMPLE_AREA_INFLUENCE")) {
+            return MathFlux.max(Flux.fromIterable(areas)
+                    .filter({it.status}), {Area left, Area right ->
+                right.calculateSimpleExteriorInfluence(position).compareTo(left.calculateSimpleExteriorInfluence(position))
+            })
+                    .map({it.calculateSimpleExteriorInfluence(position)})
+                    .defaultIfEmpty(InfluenceVector.ZERO)
+                    .block()
+        }
         return Flux.fromIterable(areas)
                 .filter({it.status })
                 .map({ it.getVectorForPosition(position) })
@@ -211,5 +233,9 @@ class InfluenceVector {
 
     InfluenceVector add(InfluenceVector other) {
         return new InfluenceVector(this.x + other.x, this.y + other.y)
+    }
+
+    int compareTo(InfluenceVector other) {
+        return (x + y) <=> (other.x + other.y)
     }
 }

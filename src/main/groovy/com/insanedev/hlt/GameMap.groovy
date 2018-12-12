@@ -69,6 +69,24 @@ class GameMap {
         return toroidal_dx + toroidal_dy
     }
 
+    int calculateXDistance(final Position source, final Position target) {
+        final Position normalizedSource = normalize(source)
+        final Position normalizedTarget = normalize(target)
+        final int dx = normalizedTarget.x - normalizedSource.x
+        final int absDx = Math.abs(dx)
+        final int wrapped_dx = width - absDx
+        return absDx < wrapped_dx ? dx : (int) Math.copySign(wrapped_dx, dx) * -1
+    }
+
+    int calculateYDistance(final Position source, final Position target) {
+        final Position normalizedSource = normalize(source)
+        final Position normalizedTarget = normalize(target)
+        final int dy = normalizedTarget.y - normalizedSource.y
+        final int absDy = Math.abs(dy)
+        final int wrapped_dy = height - absDy
+        return absDy < wrapped_dy ? dy : (int) Math.copySign(wrapped_dy, dy) * -1
+    }
+
     Position normalize(final Position position) {
         return new Position(normalizeX(position.x), normalizeY(position.y))
     }

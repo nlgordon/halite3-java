@@ -25,6 +25,7 @@ abstract class Mission {
 class ExplorationMission extends Mission {
     int minCellAmount = Configurables.MIN_CELL_AMOUNT
 
+    // TODO: inject player strategy here
     ExplorationMission(Ship ship) {
         super(ship)
     }

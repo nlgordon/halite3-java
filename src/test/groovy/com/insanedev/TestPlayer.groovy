@@ -48,7 +48,7 @@ class TestPlayer extends BaseTestFakeGameEngine {
 
     def "When the strategy says to do a rollup, and a ship is exploring, it will switch to navigating to the shipyard" () {
         engine.updateShipPosition(ship, new Position(4,4))
-        def strategy = Mock(PlayerStrategyInterface)
+        def strategy = Mock(PlayerStrategy)
         player.strategy = strategy
         strategy.shouldDoRollup() >> true
         when:

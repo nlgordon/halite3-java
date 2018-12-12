@@ -8,7 +8,7 @@ class MyBot {
     static void main(final String[] args) {
         System.setProperty("reactor.logging.fallback", 'JDK')
         GameEngine gameEngine = new TextGameEngine()
-        PlayerStrategy playerStrategy = new PlayerStrategy(gameEngine)
+        ComplexPlayerStrategy playerStrategy = new ComplexPlayerStrategy(gameEngine)
         playerStrategy.init()
         playerStrategy.analyzeMap()
         playerStrategy.ready()

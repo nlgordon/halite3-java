@@ -246,7 +246,7 @@ class TestShip extends BaseTestFakeGameEngine {
     }
 
     def "When a ship is exploring, and an area influence of 1000 east, it will move east the current cell is below the minimum"() {
-        def strategy = Mock(PlayerStrategyInterface)
+        def strategy = Mock(PlayerStrategy)
         strategy.getExplorationInfluence(_) >> new InfluenceVector(1000, 0)
         player.strategy = strategy
         engine.updateShipPosition(0, 0, 0)
@@ -261,7 +261,7 @@ class TestShip extends BaseTestFakeGameEngine {
 
     def "When a ship is exploring, and an area influence of 1000 east, but is currently in an area it will not move east"() {
         def start = new Position(0, 0)
-        def strategy = Mock(PlayerStrategyInterface)
+        def strategy = Mock(PlayerStrategy)
         strategy.getExplorationInfluence(_) >> new InfluenceVector(1000, 0)
         player.strategy = strategy
         engine.updateShipPosition(ship, start)
