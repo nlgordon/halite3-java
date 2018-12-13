@@ -63,6 +63,7 @@ abstract class Area {
 
     void updateStatus() {
         computeAverageHalite()
+        computeHalite()
         if (averageHalite <= this.minHaliteForAreaConsideration) {
             getCells().subscribe({ it.area = null })
             status = false
@@ -200,7 +201,7 @@ class AmorphousArea extends Area {
 
     String toString() {
         def cells = internalCells.values().size()
-        return "AmorphousArea $cells $averageHalite"
+        return "AmorphousArea $cells $center $averageHalite $halite"
     }
 
     @Override
