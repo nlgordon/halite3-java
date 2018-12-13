@@ -125,11 +125,6 @@ class Player {
                 .collect(Collectors.toList())
     }
 
-    // TODO: This doesn't belong here
-    InfluenceVector getInfluence(Ship it) {
-        return strategy.getExplorationInfluence(it.position)
-    }
-
     Stream<Ship> getActiveShips() {
         return ships.values().stream()
                 .filter({ it.active })

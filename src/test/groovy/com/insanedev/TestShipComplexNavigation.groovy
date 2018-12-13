@@ -105,7 +105,7 @@ class TestShipComplexNavigation extends BaseTestFakeGameEngine {
         def ship = engine.createShip(0, 1, 0)
         setupShipForNavigation(ship.id.id, 2, 1)
         def obstacle = engine.createShip(1, 1, 0)
-        obstacle.mission = new HoldMission(obstacle, obstacle.position)
+        obstacle.holdPosition()
 
         when:
         runTurns(4)
@@ -143,7 +143,7 @@ class TestShipComplexNavigation extends BaseTestFakeGameEngine {
     def "When a ship at 8,8 has an opponent ship at 9,9, it won't navigate through 8,9 on the way to 8,10"() {
         def myShip = engine.createShipForPlayer(0, 8,8, 0)
         def opponentShip = engine.createShipForPlayer(1, 9,9, 0)
-        opponentShip.mission = new HoldMission(opponentShip, opponentShip.position)
+        opponentShip.holdPosition()
         myShip.navigationDestination = new Position(8,10)
         when:
         runTurns(1)

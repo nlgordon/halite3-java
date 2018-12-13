@@ -13,7 +13,7 @@ interface PlayerStrategy {
 
     boolean shouldDoRollup()
 
-    InfluenceVector getExplorationInfluence(Position position)
+    InfluenceVector getExplorationInfluence(Ship ship)
 }
 
 class NullPlayerStrategy implements PlayerStrategy {
@@ -24,7 +24,7 @@ class NullPlayerStrategy implements PlayerStrategy {
     }
 
     @Override
-    InfluenceVector getExplorationInfluence(Position position) {
+    InfluenceVector getExplorationInfluence(Ship ship) {
         return InfluenceVector.ZERO
     }
 }
@@ -90,7 +90,7 @@ class ComplexPlayerStrategy implements PlayerStrategy {
                         .blockFirst()
                 if (ship) {
                     Log.log("Assigning $ship.id to attack player $it.id at $it.shipyard.position")
-                    ship.mission = new HoldMission(ship, it.shipyard.position)
+                    ship.holdAtPosition(it.shipyard.position)
                     attackShips.add(ship)
                 }
             })
@@ -156,7 +156,8 @@ class ComplexPlayerStrategy implements PlayerStrategy {
     }
 
     @Override
-    InfluenceVector getExplorationInfluence(Position position) {
+    InfluenceVector getExplorationInfluence(Ship ship) {
+        Position position = ship.position
         if (FeatureFlags.getFlagStatus("ONE_AREA_INFLUENCE")) {
             return Flux.fromIterable(areas)
                     .filter({it.status })
@@ -170,7 +171,7 @@ class ComplexPlayerStrategy implements PlayerStrategy {
         if (FeatureFlags.getFlagStatus("SIMPLE_AREA_INFLUENCE")) {
             return MathFlux.max(Flux.fromIterable(areas)
                     .filter({it.status}), {Area left, Area right ->
-                right.calculateSimpleExteriorInfluence(position).compareTo(left.calculateSimpleExteriorInfluence(position))
+                left.calculateSimpleExteriorInfluence(position).compareTo(right.calculateSimpleExteriorInfluence(position))
             })
                     .map({it.calculateSimpleExteriorInfluence(position)})
                     .defaultIfEmpty(InfluenceVector.ZERO)

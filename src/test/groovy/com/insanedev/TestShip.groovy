@@ -251,6 +251,7 @@ class TestShip extends BaseTestFakeGameEngine {
         player.strategy = strategy
         engine.updateShipPosition(0, 0, 0)
         ship.halite = 500
+        ship.startExploring()
         def start = new Position(0, 0)
         gameMap[start].halite = ship.minCellAmount - 10
         when:
@@ -335,7 +336,7 @@ class TestShip extends BaseTestFakeGameEngine {
     }
 
     def "When a ship status is holding, it will return a stay still move"() {
-        ship.mission = new HoldMission(ship, ship.position)
+        ship.holdPosition()
         expect:
         ship.getDesiredMove().direction == Direction.STILL
     }
@@ -427,7 +428,7 @@ class TestShip extends BaseTestFakeGameEngine {
     }
 
     def "When a ship makes no move, a still entry is recorded in history"() {
-        ship.mission = new HoldMission(ship, ship.position)
+        ship.holdPosition()
         when:
         runTurns(1)
         def history1 = ship.history[2]

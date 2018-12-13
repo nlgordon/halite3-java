@@ -6,9 +6,11 @@ import reactor.math.MathFlux
 
 abstract class Mission {
     Ship ship
+    PlayerStrategy strategy
 
-    Mission(Ship ship) {
+    Mission(Ship ship, PlayerStrategy strategy) {
         this.ship = ship
+        this.strategy = strategy
     }
 
     abstract boolean isComplete()
@@ -25,9 +27,8 @@ abstract class Mission {
 class ExplorationMission extends Mission {
     int minCellAmount = Configurables.MIN_CELL_AMOUNT
 
-    // TODO: inject player strategy here
-    ExplorationMission(Ship ship) {
-        super(ship)
+    ExplorationMission(Ship ship, PlayerStrategy strategy) {
+        super(ship, strategy)
     }
 
     @Override
@@ -41,7 +42,8 @@ class ExplorationMission extends Mission {
         if (currentCellHalite >= minCellAmount || !ship.hasHaliteToMove()) {
             return ship.createPossibleMove(Direction.STILL)
         }
-        InfluenceVector influence = ship.influence
+
+        InfluenceVector influence = strategy.getExplorationInfluence(ship)
         Log.log("Deciding move with influence $influence")
         return possibleCardinalMoves()
         //TODO: I don't like that influence is injected into the possible move, should only be relevant here
@@ -70,15 +72,15 @@ class ExplorationMission extends Mission {
 
     @Override
     Mission getNextMission() {
-        return new DropOffMission(ship)
+        return new DropOffMission(ship, strategy)
     }
 }
 
 class NavigationMission extends Mission {
     Position destination
 
-    NavigationMission(Ship ship, Position destination) {
-        super(ship)
+    NavigationMission(Ship ship, Position destination, PlayerStrategy strategy) {
+        super(ship, strategy)
         this.destination = destination
         ship.destination = destination
     }
@@ -150,19 +152,19 @@ class NavigationMission extends Mission {
 
     @Override
     Mission getNextMission() {
-        return new ExplorationMission(ship)
+        return new ExplorationMission(ship, strategy)
     }
 }
 
 class DropOffMission extends NavigationMission {
-    DropOffMission(Ship ship) {
-        super(ship, ship.game.me.shipyard.position)
+    DropOffMission(Ship ship, PlayerStrategy strategy) {
+        super(ship, ship.game.me.shipyard.position, strategy)
     }
 }
 
 class HoldMission extends NavigationMission {
-    HoldMission(Ship ship, Position destination) {
-        super(ship, destination)
+    HoldMission(Ship ship, Position destination, PlayerStrategy strategy) {
+        super(ship, destination, strategy)
     }
 
     @Override

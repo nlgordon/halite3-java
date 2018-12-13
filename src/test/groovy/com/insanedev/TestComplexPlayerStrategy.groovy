@@ -167,143 +167,140 @@ class TestComplexPlayerStrategy extends BaseTestFakeGameEngine {
         assertAreaMatches(strategy.areas[0], 5, 5, position1)
     }
 
-    @Unroll
-    def "Given an area at 10,10 of 1x1 and a ship exploring at #x,#y, an area influence vector direction will be generated as #dir due to the area influence"() {
-        def position = new Position(x, y)
-
-        def areaPosition = new Position(10, 10)
-        strategy.areas.add(new SquareArea(areaPosition, 1, 1, game))
-        game.gameMap[areaPosition].halite = 1000
-        expect:
-        strategy.getExplorationInfluence(position).direction == dir
-
-        where:
-        x  | y  | dir
-        10 | 9  | Direction.SOUTH
-        10 | 11 | Direction.NORTH
-        9  | 10 | Direction.EAST
-        11 | 10 | Direction.WEST
-        11 | 12 | Direction.NORTH
-        9  | 12 | Direction.NORTH
-        11 | 8  | Direction.SOUTH
-        9  | 8  | Direction.SOUTH
-        8  | 11 | Direction.EAST
-        8  | 9  | Direction.EAST
-        12 | 11 | Direction.WEST
-        12 | 9  | Direction.WEST
-    }
+//    @Unroll
+//    def "Given an area at 10,10 of 1x1 and a ship exploring at #x,#y, an area influence vector direction will be generated as #dir due to the area influence"() {
+//        def position = new Position(x, y)
+//
+//        def areaPosition = new Position(10, 10)
+//        strategy.areas.add(new SquareArea(areaPosition, 1, 1, game))
+//        game.gameMap[areaPosition].halite = 1000
+//        expect:
+//        strategy.getExplorationInfluence(position).direction == dir
+//
+//        where:
+//        x  | y  | dir
+//        10 | 9  | Direction.SOUTH
+//        10 | 11 | Direction.NORTH
+//        9  | 10 | Direction.EAST
+//        11 | 10 | Direction.WEST
+//        11 | 12 | Direction.NORTH
+//        9  | 12 | Direction.NORTH
+//        11 | 8  | Direction.SOUTH
+//        9  | 8  | Direction.SOUTH
+//        8  | 11 | Direction.EAST
+//        8  | 9  | Direction.EAST
+//        12 | 11 | Direction.WEST
+//        12 | 9  | Direction.WEST
+//    }
 
     //TODO: Don't hardcode numbers in here, should just be testing direction
-    @Ignore
-    @Unroll
-    def "Given an area at 10,10 of 1x1 and a ship exploring at #x,#y, an area influence vector will be generated of #ix,#iy due to the area influence"() {
-        def position = new Position(x, y)
-        def areaPosition = new Position(10, 10)
-        strategy.areas.add(new SquareArea(areaPosition, 1, 1, game))
-        game.gameMap[areaPosition].halite = 1000
-        def influcence = strategy.getExplorationInfluence(position)
-        expect:
-        influcence.x == ix
-        influcence.y == iy
-
-        where:
-        x  | y  | ix   | iy
-        10 | 9  | 0    | 900
-        10 | 11 | 0    | -900
-        9  | 10 | 900  | 0
-        11 | 10 | -900 | 0
-    }
-
-    @Unroll
-    def "Given an area at #areaX,#areaY of 1x1 and a ship exploring at #x,#y, an area influence vector will be generated in the direction of #dir wrapping around the map due to the area influence"() {
-        def position = new Position(x, y)
-        def areaPosition = new Position(areaX, areaY)
-        strategy.areas.add(new SquareArea(areaPosition, 1, 1, game))
-        game.gameMap[areaPosition].halite = 1000
-        def influcence = strategy.getExplorationInfluence(position)
-        expect:
-        influcence.x.compareTo(0) == xDir
-        influcence.y.compareTo(0) == yDir
-
-        where:
-        areaX | areaY | x  | y  | xDir | yDir
-        5     | 5     | 30 | 5  | 1    | 0
-        5     | 5     | 5  | 30 | 0    | 1
-        27    | 27    | 2  | 27 | -1   | 0
-        27    | 27    | 27 | 2  | 0    | -1
+//    @Ignore
+//    @Unroll
+//    def "Given an area at 10,10 of 1x1 and a ship exploring at #x,#y, an area influence vector will be generated of #ix,#iy due to the area influence"() {
+//        def position = new Position(x, y)
+//        def areaPosition = new Position(10, 10)
+//        strategy.areas.add(new SquareArea(areaPosition, 1, 1, game))
+//        game.gameMap[areaPosition].halite = 1000
+//        def influcence = strategy.getExplorationInfluence(position)
+//        expect:
+//        influcence.x == ix
+//        influcence.y == iy
+//
+//        where:
+//        x  | y  | ix   | iy
+//        10 | 9  | 0    | 900
 //        10 | 11 | 0    | -900
 //        9  | 10 | 900  | 0
 //        11 | 10 | -900 | 0
-    }
+//    }
 
-    @Ignore
-    @Unroll
-    def "Given an area at 10,10 of 1x1 and a ship exploring at #x,#y, an area influence vector will be generated with cell influence of #i in direction #dir due to the area influence"() {
-        def position = new Position(x, y)
-        def areaPosition = new Position(10, 10)
-        strategy.areas.add(new SquareArea(areaPosition, 1, 1, game))
-        game.gameMap[areaPosition].halite = 100
-        def influcence = strategy.getExplorationInfluence(position)
-        expect:
-        influcence.appliedToDirection(dir) == i
+//    @Unroll
+//    def "Given an area at #areaX,#areaY of 1x1 and a ship exploring at #x,#y, an area influence vector will be generated in the direction of #dir wrapping around the map due to the area influence"() {
+//        def position = new Position(x, y)
+//        def areaPosition = new Position(areaX, areaY)
+//        strategy.areas.add(new SquareArea(areaPosition, 1, 1, game))
+//        game.gameMap[areaPosition].halite = 1000
+//        def influcence = strategy.getExplorationInfluence(position)
+//        expect:
+//        influcence.x.compareTo(0) == xDir
+//        influcence.y.compareTo(0) == yDir
+//
+//        where:
+//        areaX | areaY | x  | y  | xDir | yDir
+//        5     | 5     | 30 | 5  | 1    | 0
+//        5     | 5     | 5  | 30 | 0    | 1
+//        27    | 27    | 2  | 27 | -1   | 0
+//        27    | 27    | 27 | 2  | 0    | -1
+//    }
 
-        where:
-        x  | y  | i   | dir
-        10 | 9  | -90 | Direction.SOUTH
-        10 | 9  | 90  | Direction.NORTH
-        10 | 9  | 0   | Direction.EAST
-        10 | 9  | 0   | Direction.WEST
-        10 | 11 | -90 | Direction.NORTH
-        10 | 11 | 0   | Direction.EAST
-        10 | 11 | 90  | Direction.SOUTH
-        10 | 11 | 0   | Direction.WEST
-        9  | 10 | 90  | Direction.EAST
-        9  | 10 | -90 | Direction.WEST
-        9  | 10 | 0   | Direction.NORTH
-        9  | 10 | 0   | Direction.SOUTH
-        11 | 10 | 90  | Direction.WEST
-        11 | 10 | -90 | Direction.EAST
-        11 | 10 | 0   | Direction.NORTH
-        11 | 10 | 0   | Direction.SOUTH
-    }
+//    @Ignore
+//    @Unroll
+//    def "Given an area at 10,10 of 1x1 and a ship exploring at #x,#y, an area influence vector will be generated with cell influence of #i in direction #dir due to the area influence"() {
+//        def position = new Position(x, y)
+//        def areaPosition = new Position(10, 10)
+//        strategy.areas.add(new SquareArea(areaPosition, 1, 1, game))
+//        game.gameMap[areaPosition].halite = 100
+//        def influcence = strategy.getExplorationInfluence(position)
+//        expect:
+//        influcence.appliedToDirection(dir) == i
+//
+//        where:
+//        x  | y  | i   | dir
+//        10 | 9  | -90 | Direction.SOUTH
+//        10 | 9  | 90  | Direction.NORTH
+//        10 | 9  | 0   | Direction.EAST
+//        10 | 9  | 0   | Direction.WEST
+//        10 | 11 | -90 | Direction.NORTH
+//        10 | 11 | 0   | Direction.EAST
+//        10 | 11 | 90  | Direction.SOUTH
+//        10 | 11 | 0   | Direction.WEST
+//        9  | 10 | 90  | Direction.EAST
+//        9  | 10 | -90 | Direction.WEST
+//        9  | 10 | 0   | Direction.NORTH
+//        9  | 10 | 0   | Direction.SOUTH
+//        11 | 10 | 90  | Direction.WEST
+//        11 | 10 | -90 | Direction.EAST
+//        11 | 10 | 0   | Direction.NORTH
+//        11 | 10 | 0   | Direction.SOUTH
+//    }
 
-    @Ignore
-    @Unroll
-    def "Given an area at 12,10 and 8,10 of 1x1 and a ship exploring at #x,#y, an area influence vector will be generated with cell influence of #i in direction #dir due to the area influence"() {
-        def position = new Position(x, y)
-        def areaPosition1 = new Position(12, 10)
-        strategy.areas.add(new SquareArea(areaPosition1, 1, 1, game))
-        game.gameMap[areaPosition1].halite = 100
-        def areaPosition2 = new Position(8, 10)
-        strategy.areas.add(new SquareArea(areaPosition2, 1, 1, game))
-        game.gameMap[areaPosition2].halite = 100
-        def influcence = strategy.getExplorationInfluence(position)
-        expect:
-        influcence.appliedToDirection(dir) == i
-
-        where:
-        x  | y  | i   | dir
-        10 | 10 | 0   | Direction.NORTH
-        10 | 10 | 0   | Direction.SOUTH
-        10 | 10 | 0   | Direction.EAST
-        10 | 10 | 0   | Direction.WEST
-        11 | 10 | 18  | Direction.EAST
-        11 | 10 | -18 | Direction.WEST
-        11 | 10 | 0   | Direction.NORTH
-        11 | 10 | 0   | Direction.SOUTH
-        9  | 10 | -18 | Direction.EAST
-        9  | 10 | 18  | Direction.WEST
-        9  | 10 | 0   | Direction.NORTH
-        9  | 10 | 0   | Direction.SOUTH
-        10 | 9  | -70 | Direction.SOUTH
-        10 | 9  | 70  | Direction.NORTH
-        10 | 9  | 0   | Direction.EAST
-        10 | 9  | 0   | Direction.WEST
-        10 | 11 | -70 | Direction.NORTH
-        10 | 11 | 0   | Direction.EAST
-        10 | 11 | 70  | Direction.SOUTH
-        10 | 11 | 0   | Direction.WEST
-    }
+//    @Ignore
+//    @Unroll
+//    def "Given an area at 12,10 and 8,10 of 1x1 and a ship exploring at #x,#y, an area influence vector will be generated with cell influence of #i in direction #dir due to the area influence"() {
+//        def position = new Position(x, y)
+//        def areaPosition1 = new Position(12, 10)
+//        strategy.areas.add(new SquareArea(areaPosition1, 1, 1, game))
+//        game.gameMap[areaPosition1].halite = 100
+//        def areaPosition2 = new Position(8, 10)
+//        strategy.areas.add(new SquareArea(areaPosition2, 1, 1, game))
+//        game.gameMap[areaPosition2].halite = 100
+//        def influcence = strategy.getExplorationInfluence(position)
+//        expect:
+//        influcence.appliedToDirection(dir) == i
+//
+//        where:
+//        x  | y  | i   | dir
+//        10 | 10 | 0   | Direction.NORTH
+//        10 | 10 | 0   | Direction.SOUTH
+//        10 | 10 | 0   | Direction.EAST
+//        10 | 10 | 0   | Direction.WEST
+//        11 | 10 | 18  | Direction.EAST
+//        11 | 10 | -18 | Direction.WEST
+//        11 | 10 | 0   | Direction.NORTH
+//        11 | 10 | 0   | Direction.SOUTH
+//        9  | 10 | -18 | Direction.EAST
+//        9  | 10 | 18  | Direction.WEST
+//        9  | 10 | 0   | Direction.NORTH
+//        9  | 10 | 0   | Direction.SOUTH
+//        10 | 9  | -70 | Direction.SOUTH
+//        10 | 9  | 70  | Direction.NORTH
+//        10 | 9  | 0   | Direction.EAST
+//        10 | 9  | 0   | Direction.WEST
+//        10 | 11 | -70 | Direction.NORTH
+//        10 | 11 | 0   | Direction.EAST
+//        10 | 11 | 70  | Direction.SOUTH
+//        10 | 11 | 0   | Direction.WEST
+//    }
 
 
     void assertAreaMatches(Area area, int width, int height, Position position) {

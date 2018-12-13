@@ -25,7 +25,7 @@ class Ship extends Entity {
             minCellAmount = minCellAmount / 2
         }
 
-        this.mission = new ExplorationMission(this)
+        startExploring()
     }
 
     boolean isFull() {
@@ -53,11 +53,23 @@ class Ship extends Entity {
     }
 
     void setNavigationDestination(Position position) {
-        this.mission = new NavigationMission(this, position)
+        this.mission = new NavigationMission(this, position, player.strategy)
     }
 
     void doDropoff() {
-        this.mission = new DropOffMission(this)
+        this.mission = new DropOffMission(this, player.strategy)
+    }
+
+    void holdPosition() {
+        this.mission = new HoldMission(this, this.position, player.strategy)
+    }
+
+    void holdAtPosition(Position position) {
+        this.mission = new HoldMission(this, position, player.strategy)
+    }
+
+    void startExploring() {
+        this.mission = new ExplorationMission(this, player.strategy)
     }
 
     PossibleMove getDesiredMove() {
@@ -171,11 +183,6 @@ class Ship extends Entity {
 
     int getHaliteAtCurrentPosition() {
         game.gameMap[position].halite
-    }
-
-    // TODO: This doesn't belong here
-    InfluenceVector getInfluence() {
-        player.getInfluence(this)
     }
 
     String toString() {
