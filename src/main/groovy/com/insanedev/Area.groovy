@@ -96,11 +96,14 @@ abstract class Area {
     InfluenceVector calculateSimpleExteriorInfluence(Position position) {
         //TODO: Move this check to the ship/mission instead of the area
         if (isInArea(position)) {
-            return getInnerAreaInfluence(position)
+            def influence = getInnerAreaInfluence(position)
+            Log.log("Inside area influence: $influence")
+            return influence
         }
         if (halite) {
-            final int dy = map.calculateYDistance(center, position)
-            final int dx = map.calculateXDistance(center, position)
+//            Log.log("Calculating influence for center: $center and position: $position")
+            final int dy = map.calculateYDistance(position, center)
+            final int dx = map.calculateXDistance(position, center)
             def totalDistance = Math.abs(dx) + Math.abs(dy)
             def xRatio = dx / totalDistance
             def yRatio = dy / totalDistance

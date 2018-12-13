@@ -173,7 +173,7 @@ class TestAmorphousArea extends BaseTestFakeGameEngine {
         Flux.fromIterable(cells).subscribe({it.halite = 100})
         def area = new AmorphousArea(cells, game)
         when:
-        def influence = area.calculateSimpleExteriorInfluence(new Position(6, 5))
+        def influence = area.calculateSimpleExteriorInfluence(new Position(4, 5))
         then:
         influence == new InfluenceVector(100, 0)
     }
@@ -183,7 +183,7 @@ class TestAmorphousArea extends BaseTestFakeGameEngine {
         Flux.fromIterable(cells).subscribe({it.halite = 100})
         def area = new AmorphousArea(cells, game)
         when:
-        def influence = area.calculateSimpleExteriorInfluence(new Position(4, 5))
+        def influence = area.calculateSimpleExteriorInfluence(new Position(6, 5))
         then:
         influence == new InfluenceVector(-100, 0)
     }
@@ -193,7 +193,7 @@ class TestAmorphousArea extends BaseTestFakeGameEngine {
         Flux.fromIterable(cells).subscribe({it.halite = 100})
         def area = new AmorphousArea(cells, game)
         when:
-        def influence = area.calculateSimpleExteriorInfluence(new Position(7, 5))
+        def influence = area.calculateSimpleExteriorInfluence(new Position(3, 5))
         then:
         influence == new InfluenceVector(50, 0)
     }
@@ -203,7 +203,7 @@ class TestAmorphousArea extends BaseTestFakeGameEngine {
         Flux.fromIterable(cells).subscribe({it.halite = 100})
         def area = new AmorphousArea(cells, game)
         when:
-        def influence = area.calculateSimpleExteriorInfluence(new Position(5, 6))
+        def influence = area.calculateSimpleExteriorInfluence(new Position(5, 4))
         then:
         influence == new InfluenceVector(0, 100)
     }
@@ -213,7 +213,7 @@ class TestAmorphousArea extends BaseTestFakeGameEngine {
         Flux.fromIterable(cells).subscribe({it.halite = 100})
         def area = new AmorphousArea(cells, game)
         when:
-        def influence = area.calculateSimpleExteriorInfluence(new Position(5, 4))
+        def influence = area.calculateSimpleExteriorInfluence(new Position(5, 6))
         then:
         influence == new InfluenceVector(0, -100)
     }
@@ -223,7 +223,7 @@ class TestAmorphousArea extends BaseTestFakeGameEngine {
         Flux.fromIterable(cells).subscribe({it.halite = 100})
         def area = new AmorphousArea(cells, game)
         when:
-        def influence = area.calculateSimpleExteriorInfluence(new Position(5, 7))
+        def influence = area.calculateSimpleExteriorInfluence(new Position(5, 3))
         then:
         influence == new InfluenceVector(0, 50)
     }
@@ -233,7 +233,7 @@ class TestAmorphousArea extends BaseTestFakeGameEngine {
         Flux.fromIterable(cells).subscribe({it.halite = 100})
         def area = new AmorphousArea(cells, game)
         when:
-        def influence = area.calculateSimpleExteriorInfluence(new Position(6, 6))
+        def influence = area.calculateSimpleExteriorInfluence(new Position(4, 4))
         then:
         influence == new InfluenceVector(25, 25)
     }
@@ -243,7 +243,7 @@ class TestAmorphousArea extends BaseTestFakeGameEngine {
         Flux.fromIterable(cells).subscribe({it.halite = 100})
         def area = new AmorphousArea(cells, game)
         when:
-        def influence = area.calculateSimpleExteriorInfluence(new Position(4, 6))
+        def influence = area.calculateSimpleExteriorInfluence(new Position(6, 4))
         then:
         influence == new InfluenceVector(-25, 25)
     }

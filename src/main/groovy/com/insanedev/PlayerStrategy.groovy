@@ -174,7 +174,11 @@ class ComplexPlayerStrategy implements PlayerStrategy {
                     .filter({it.status}), {Area left, Area right ->
                 left.calculateSimpleExteriorInfluence(position).compareTo(right.calculateSimpleExteriorInfluence(position))
             })
-                    .map({it.calculateSimpleExteriorInfluence(position)})
+                    .map({
+                InfluenceVector influence = it.calculateSimpleExteriorInfluence(position)
+                Log.log("Using area $it for position $position with influence: $influence")
+                return influence
+            })
                     .defaultIfEmpty(InfluenceVector.ZERO)
                     .block()
         }
