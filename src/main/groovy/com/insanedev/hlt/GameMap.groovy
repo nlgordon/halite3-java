@@ -35,6 +35,10 @@ class GameMap {
         }
     }
 
+    void addShip(Ship ship) {
+        at(ship).ship = ship
+    }
+
     MapCell getAt(final Position position) {
         return at(position)
     }

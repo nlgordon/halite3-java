@@ -24,7 +24,11 @@ class Player {
     }
 
     Ship getShip(int id) {
-        return ships[new EntityId(id)]
+        return getShip(new EntityId(id))
+    }
+
+    Ship getShip(EntityId shipId) {
+        return ships[shipId]
     }
 
     static Player create(int playerId, int shipyard_x, int shipyard_y) {
@@ -49,6 +53,10 @@ class Player {
         update.dropoffUpdates.each({
             it.buildDropoff(this)
         })
+    }
+
+    void addShip(Ship ship) {
+        ships[ship.id] = ship
     }
 
     void markShipsDestroyed(List<EntityId> updatedShips) {

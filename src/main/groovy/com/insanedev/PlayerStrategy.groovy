@@ -83,7 +83,7 @@ class ComplexPlayerStrategy implements PlayerStrategy {
             })
                     .subscribe({
                 Log.log("Need to attack $it.id")
-                Ship ship = Flux.fromIterable(me.ships.values())
+                Ship ship = Flux.fromStream(me.getActiveShips())
                         .filter({ !it.destination })
                         .filter({ it.halite < 100 })
                         .sort({ Ship left, Ship right -> right.halite.compareTo(left.halite) })

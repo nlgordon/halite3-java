@@ -108,6 +108,7 @@ class FakeGameEngine implements GameEngine {
     }
 
     List<GameUpdate> getUpdatesFromPlayerShips(Map<EntityId, MoveCommand> moveCommands, Map<EntityId, ConstructDropoffCommand> dropoffCommands) {
+        //TODO: Convert to me.getActiveShips() and a stream
         return me.ships.values()
                 .findAll { it.active }
                 .collect { Ship ship ->
@@ -194,11 +195,13 @@ class FakeGameEngine implements GameEngine {
     }
 
     Ship createShip(int x, int y, int halite) {
-        return me.ships[new ShipUpdate(game, new EntityId(maxShipId++), new Position(x, y), halite).apply(me)]
+        def shipId = new ShipUpdate(game, new EntityId(maxShipId++), new Position(x, y), halite).apply(me)
+        return me.getShip(shipId)
     }
 
     Ship createShipForPlayer(int playerId, int x, int y, int halite) {
-        return players[playerId].ships[new ShipUpdate(game, new EntityId(maxShipId++), new Position(x, y), halite).apply(players[playerId])]
+        def shipId = new ShipUpdate(game, new EntityId(maxShipId++), new Position(x, y), halite).apply(players[playerId])
+        return players[playerId].getShip(shipId)
     }
 
     void updateShipPosition(Ship ship, Position position) {
@@ -206,7 +209,7 @@ class FakeGameEngine implements GameEngine {
     }
 
     void updateShipPosition(int shipId, int x, int y) {
-        Ship ship = me.ships[new EntityId(shipId)]
+        Ship ship = me.getShip(shipId)
         updateShipPosition(ship, new Position(x, y))
     }
 }

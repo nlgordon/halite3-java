@@ -21,6 +21,7 @@ class FeatureFlags {
 //                    "UNWRAPPED_AREA_INFLUENCE"
 //                    "ONE_AREA_INFLUENCE",
 //                    "NO_MAGNITUDE_REDUCTION"
+//                    "SIMPLE_AREA_INFLUENCE"
             ]
     ]
 

@@ -22,14 +22,14 @@ class ShipUpdate extends GameUpdate {
     }
 
     EntityId apply(Player player) {
-        Ship ship = player.ships[id]
+        Ship ship = player.getShip(id)
         if (ship) {
             ship.update(position, halite)
         } else {
             Log.debug("Creating ship $id at $position")
             ship = new Ship(game, player, id, position, halite)
-            player.ships[id] = ship
-            game.gameMap[position].ship = ship
+            player.addShip(ship)
+            game.gameMap.addShip(ship)
         }
 
         Log.debug("Map cell for updated ship $id: ${game.gameMap[position]}")
