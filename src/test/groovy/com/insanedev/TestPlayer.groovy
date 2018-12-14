@@ -37,10 +37,11 @@ class TestPlayer extends BaseTestFakeGameEngine {
         ship2.navigationDestination = ship3Start
         ship3.navigationDestination = ship4Start
         ship4.navigationDestination = ship1Start
-        def poolOfMoves = player.possibleMovesToMapByShip(player.collectDesiredMoves())
+        Dispatcher dispatcher = new Dispatcher()
+        def poolOfMoves = dispatcher.possibleMovesToMapByShip(dispatcher.collectDesiredMoves(player.getActiveShips()))
 
         when:
-        def moves = player.chainRequiredMoves([], poolOfMoves, poolOfMoves[ship], ship)
+        def moves = dispatcher.chainRequiredMoves([], poolOfMoves, poolOfMoves[ship], ship)
 
         then:
         moves.size() == 0
