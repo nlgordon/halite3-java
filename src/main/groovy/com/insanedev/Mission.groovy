@@ -27,11 +27,9 @@ import reactor.math.MathFlux
 
 abstract class Mission {
     Ship ship
-    PlayerStrategy strategy
 
-    Mission(Ship ship, PlayerStrategy strategy) {
+    Mission(Ship ship) {
         this.ship = ship
-        this.strategy = strategy
     }
 
     abstract boolean isComplete()
@@ -48,8 +46,8 @@ abstract class Mission {
 class ExplorationMission extends Mission {
     int minCellAmount = Configurables.MIN_CELL_AMOUNT
 
-    ExplorationMission(Ship ship, PlayerStrategy strategy) {
-        super(ship, strategy)
+    ExplorationMission(Ship ship) {
+        super(ship)
     }
 
     @Override
@@ -69,7 +67,7 @@ class ExplorationMission extends Mission {
         if (ship.currentCell.area) {
             influence = ship.currentCell.area.getInnerAreaInfluence(ship)
         } else {
-            influence = strategy.getExplorationInfluence(ship)
+            influence = ship.player.strategy.getExplorationInfluence(ship)
         }
 
         Log.log("Deciding move with influence $influence")
@@ -100,15 +98,15 @@ class ExplorationMission extends Mission {
 
     @Override
     Mission getNextMission() {
-        return new DropOffMission(ship, strategy)
+        return new DropOffMission(ship)
     }
 }
 
 class NavigationMission extends Mission {
     Position destination
 
-    NavigationMission(Ship ship, Position destination, PlayerStrategy strategy) {
-        super(ship, strategy)
+    NavigationMission(Ship ship, Position destination) {
+        super(ship)
         this.destination = destination
         ship.destination = destination
     }
@@ -180,19 +178,19 @@ class NavigationMission extends Mission {
 
     @Override
     Mission getNextMission() {
-        return new ExplorationMission(ship, strategy)
+        return new ExplorationMission(ship)
     }
 }
 
 class DropOffMission extends NavigationMission {
-    DropOffMission(Ship ship, PlayerStrategy strategy) {
-        super(ship, ship.game.me.shipyard.position, strategy)
+    DropOffMission(Ship ship) {
+        super(ship, ship.player.shipyard.position)
     }
 }
 
 class HoldMission extends NavigationMission {
-    HoldMission(Ship ship, Position destination, PlayerStrategy strategy) {
-        super(ship, destination, strategy)
+    HoldMission(Ship ship, Position destination) {
+        super(ship, destination)
     }
 
     @Override

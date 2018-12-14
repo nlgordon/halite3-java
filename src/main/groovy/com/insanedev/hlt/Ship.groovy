@@ -53,23 +53,23 @@ class Ship extends Entity {
     }
 
     void setNavigationDestination(Position position) {
-        this.mission = new NavigationMission(this, position, player.strategy)
+        this.mission = new NavigationMission(this, position)
     }
 
     void doDropoff() {
-        this.mission = new DropOffMission(this, player.strategy)
+        this.mission = new DropOffMission(this)
     }
 
     void holdPosition() {
-        this.mission = new HoldMission(this, this.position, player.strategy)
+        this.mission = new HoldMission(this, this.position)
     }
 
     void holdAtPosition(Position position) {
-        this.mission = new HoldMission(this, position, player.strategy)
+        this.mission = new HoldMission(this, position)
     }
 
     void startExploring() {
-        this.mission = new ExplorationMission(this, player.strategy)
+        this.mission = new ExplorationMission(this)
     }
 
     PossibleMove getDesiredMove() {
