@@ -86,7 +86,7 @@ class ComplexPlayerStrategy implements PlayerStrategy {
                 Ship ship = Flux.fromIterable(me.ships.values())
                         .filter({ !it.destination })
                         .filter({ it.halite < 100 })
-                        .sort({Ship left, Ship right -> right.halite.compareTo(left.halite)})
+                        .sort({ Ship left, Ship right -> right.halite.compareTo(left.halite) })
                         .blockFirst()
                 if (ship) {
                     Log.log("Assigning $ship.id to attack player $it.id at $it.shipyard.position")
@@ -98,7 +98,7 @@ class ComplexPlayerStrategy implements PlayerStrategy {
     }
 
     void updateAreas() {
-        Flux.fromIterable(areas).subscribe({it.updateStatus()})
+        Flux.fromIterable(areas).subscribe({ it.updateStatus() })
     }
 
     void handleFrame() {
@@ -149,7 +149,7 @@ class ComplexPlayerStrategy implements PlayerStrategy {
         int remainingTurns = Constants.MAX_TURNS - game.turnNumber
         def shipyardPosition = me.shipyard.position
         int maxDistanceFromShipyard = MathFlux.max(Flux.fromStream(me.activeShips)
-                .map({ it.calculateDistance(shipyardPosition)}))
+                .map({ it.calculateDistance(shipyardPosition) }))
                 .defaultIfEmpty(0)
                 .block()
         return maxDistanceFromShipyard + 2 >= remainingTurns
@@ -160,8 +160,8 @@ class ComplexPlayerStrategy implements PlayerStrategy {
         Position position = ship.position
         if (FeatureFlags.getFlagStatus("ONE_AREA_INFLUENCE")) {
             return Flux.fromIterable(areas)
-                    .filter({it.status })
-                    .sort({Area left, Area right ->
+                    .filter({ it.status })
+                    .sort({ Area left, Area right ->
                 gameMap.calculateDistance(left.center, position) <=> gameMap.calculateDistance(right.center, position)
             })
                     .map({ it.getVectorForPosition(position) })
@@ -172,7 +172,7 @@ class ComplexPlayerStrategy implements PlayerStrategy {
             // TODO: Instead of this, should assign ships to areas based on need and do something with explorigation
             // Use a formula to sort the areas with 3 weighted components: distance, avg halite, total halite
             return MathFlux.max(Flux.fromIterable(areas)
-                    .filter({it.status}), {Area left, Area right ->
+                    .filter({ it.status }), { Area left, Area right ->
                 left.calculateSimpleExteriorInfluence(position).compareTo(right.calculateSimpleExteriorInfluence(position))
             })
                     .map({
@@ -184,7 +184,7 @@ class ComplexPlayerStrategy implements PlayerStrategy {
                     .block()
         }
         return Flux.fromIterable(areas)
-                .filter({it.status })
+                .filter({ it.status })
                 .map({ it.getVectorForPosition(position) })
                 .reduce(InfluenceVector.ZERO, { InfluenceVector accumulator, InfluenceVector addition ->
             accumulator.add(addition)
