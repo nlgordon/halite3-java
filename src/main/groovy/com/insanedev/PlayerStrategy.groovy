@@ -170,6 +170,7 @@ class ComplexPlayerStrategy implements PlayerStrategy {
         }
         if (FeatureFlags.getFlagStatus("SIMPLE_AREA_INFLUENCE")) {
             // TODO: Instead of this, should assign ships to areas based on need and do something with explorigation
+            // Use a formula to sort the areas with 3 weighted components: distance, avg halite, total halite
             return MathFlux.max(Flux.fromIterable(areas)
                     .filter({it.status}), {Area left, Area right ->
                 left.calculateSimpleExteriorInfluence(position).compareTo(right.calculateSimpleExteriorInfluence(position))

@@ -5,6 +5,7 @@ import com.insanedev.hlt.GameMap
 import com.insanedev.hlt.Log
 import com.insanedev.hlt.MapCell
 import com.insanedev.hlt.Position
+import com.insanedev.hlt.Ship
 import groovy.transform.EqualsAndHashCode
 import reactor.core.publisher.Flux
 import reactor.math.MathFlux
@@ -71,10 +72,6 @@ abstract class Area {
     }
 
     InfluenceVector getVectorForPosition(Position position) {
-        if (isInArea(position)) {
-            // Get cell with max halite, influence that direction
-            return getInnerAreaInfluence(position)
-        }
         def influenceVector = InfluenceCalculator.calculateVectorWrapped(map, center, position, averageHalite as int)
         Log.log("Calculating influence for area at $center for position $position $influenceVector")
         return influenceVector
@@ -84,7 +81,11 @@ abstract class Area {
         return internalCells.containsKey(position)
     }
 
-    private InfluenceVector getInnerAreaInfluence(Position position) {
+    InfluenceVector getInnerAreaInfluence(Ship ship) {
+        return getInnerAreaInfluence(ship.position)
+    }
+
+    InfluenceVector getInnerAreaInfluence(Position position) {
         MapCell max = MathFlux.max(Flux.fromIterable(internalCells.values()), MapCell.haliteComparator).block()
         return InfluenceCalculator.calculateVectorWrapped(map, max.position, position, max.halite)
     }
@@ -94,22 +95,15 @@ abstract class Area {
     }
 
     InfluenceVector calculateSimpleExteriorInfluence(Position position) {
-        //TODO: Move this check to the ship/mission instead of the area
-        if (isInArea(position)) {
-            def influence = getInnerAreaInfluence(position)
-            Log.log("Inside area influence: $influence")
-            return influence
-        }
         if (halite) {
-//            Log.log("Calculating influence for center: $center and position: $position")
             final int dy = map.calculateYDistance(position, center)
             final int dx = map.calculateXDistance(position, center)
             def totalDistance = Math.abs(dx) + Math.abs(dy)
             def xRatio = dx / totalDistance
             def yRatio = dy / totalDistance
 
-            def yInfluence = (halite / totalDistance * yRatio).toInteger()
-            def xInfluence = (halite / totalDistance * xRatio).toInteger()
+            def yInfluence = (averageHalite / totalDistance * yRatio).toInteger()
+            def xInfluence = (averageHalite / totalDistance * xRatio).toInteger()
 
             return new InfluenceVector(xInfluence, yInfluence)
         }

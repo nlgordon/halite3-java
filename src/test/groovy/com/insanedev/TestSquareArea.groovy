@@ -128,7 +128,7 @@ class TestSquareArea extends BaseTestFakeGameEngine {
         game.gameMap.at(7,5).halite = 1000
 
         expect:
-        area.getVectorForPosition(center).x > 0
+        area.getInnerAreaInfluence(center).x > 0
     }
 
     def "When an area updates its status, and average is below the MIN_CELL_AMOUNT, then it removes it self from all affected cells"() {

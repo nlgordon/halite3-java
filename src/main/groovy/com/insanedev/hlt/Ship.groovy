@@ -185,6 +185,10 @@ class Ship extends Entity {
         game.gameMap[position].halite
     }
 
+    MapCell getCurrentCell() {
+        return game.gameMap[this]
+    }
+
     String toString() {
         return "id:$id $position halite:$halite"
     }

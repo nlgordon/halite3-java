@@ -4,6 +4,27 @@ import com.insanedev.hlt.*
 import reactor.core.publisher.Flux
 import reactor.math.MathFlux
 
+/**
+ * TODO:
+ * Ship navigation mgmt system
+ * There is a need board responsible for finding assignments for ships
+ * Each ship mission is potentially tied to an assignment
+ * Assignments include areas of interest, shipyards/dropoffs
+ * Areas re-assign a full ship to a shipyard when full
+ * Shipyards re-assign a ship based on the need board once emptied
+ * Create interfaces describing different types of need and a way to indicate the need is fullfilled
+ * Shipyards and areas have dispatchers who take control of their owned ships to coordinate movement
+ * Shipyards create entrance and exit lanes that are assigned to a ship to manage entrance and exit
+ * Areas analyze their area and level of depletion to determine how many ships they need
+ * Advanced logic in an area would look at cross section of harvesting to maximize efficiency
+ * Implement control of ship movements as dispatchers that coordinate incoming movement and graceful exit
+ * Dispatcher might be forward planning for an entire path, or only a current turn planner
+ * Shipyard dispatcher would likely be forward planning to coordinate lots of ships moving in and out of the single cell
+ * Area dispatcher would likely look at just the next best cell
+ * Dispatchers would be responsible for negotiating when ships want to move across each other
+ * Would also have one dispatcher for unguided exploration/assignment
+ */
+
 abstract class Mission {
     Ship ship
     PlayerStrategy strategy
@@ -43,10 +64,17 @@ class ExplorationMission extends Mission {
             return ship.createPossibleMove(Direction.STILL)
         }
 
-        InfluenceVector influence = strategy.getExplorationInfluence(ship)
+        InfluenceVector influence
+
+        if (ship.currentCell.area) {
+            influence = ship.currentCell.area.getInnerAreaInfluence(ship)
+        } else {
+            influence = strategy.getExplorationInfluence(ship)
+        }
+
         Log.log("Deciding move with influence $influence")
         return possibleCardinalMoves()
-        //TODO: I don't like that influence is injected into the possible move, should only be relevant here
+        //TODO: I don't like that influence is injected into the possible move, should only be relevant here to filter cardinals
                 .map({ it.influence = influence; it })
                 .filter({ it.halite > currentCellHalite || currentCellHalite == 0 })
                 .sort({ PossibleMove left, PossibleMove right -> right.halite.compareTo(left.halite) })
