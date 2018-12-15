@@ -1,5 +1,6 @@
 package com.insanedev.fakeengine
 
+import com.insanedev.ComplexPlayerStrategy
 import com.insanedev.hlt.*
 import spock.lang.Specification
 
@@ -9,10 +10,12 @@ class BaseTestFakeGameEngine extends Specification {
     FakeGameEngine engine
     Game game
     Player player
+    ComplexPlayerStrategy strategy
 
     void initGame(int playerId, int shipyardX, int shipyardY, int mapWidth, int mapHeight) {
         createEngine(playerId, shipyardX, shipyardY, mapWidth, mapHeight)
-        game = engine.init()
+        strategy = new ComplexPlayerStrategy(engine)
+        game = strategy.init()
         player = game.me
         engine.updateFrame()
     }
@@ -26,7 +29,8 @@ class BaseTestFakeGameEngine extends Specification {
         def player2 = Player.create(1, player2ShipyardX, player2ShipyardY)
         List<Player> players = [player1, player2]
         engine = new FakeGameEngine(players, mapWidth, mapHeight)
-        game = engine.init()
+        strategy = new ComplexPlayerStrategy(engine)
+        game = strategy.init()
         player = game.me
         engine.updateFrame()
     }
@@ -65,7 +69,7 @@ class BaseTestFakeGameEngine extends Specification {
     }
 
     void navigateShips() {
-        engine.endTurn(player.navigateShips())
+        engine.endTurn(strategy.navigateShips())
         engine.updateFrame()
     }
 

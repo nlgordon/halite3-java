@@ -34,7 +34,7 @@ class FakeGameEngine implements GameEngine {
                 "NEW_ENTITY_ENERGY_COST"   : "1000",
                 "DROPOFF_COST"             : "4000",
                 "MAX_ENERGY"               : "1000",
-                "MAX_TURNS"                : "0",
+                "MAX_TURNS"                : "1000",
                 "EXTRACT_RATIO"            : "0",
                 "MOVE_COST_RATIO"          : "0",
                 "INSPIRATION_ENABLED"      : "false",

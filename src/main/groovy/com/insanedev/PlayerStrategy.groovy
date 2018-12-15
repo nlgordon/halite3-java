@@ -29,6 +29,7 @@ class NullPlayerStrategy implements PlayerStrategy {
     }
 }
 
+// TODO: Not Tested
 class ComplexPlayerStrategy implements PlayerStrategy {
     GameEngine engine
     Game game
@@ -42,19 +43,11 @@ class ComplexPlayerStrategy implements PlayerStrategy {
     }
 
     Game init() {
-        def start = LocalTime.now()
         game = engine.init()
         me = game.me
         FeatureFlags.setPlayer(me)
-        Log.log("Running with flags: ${FeatureFlags.getFlags()}")
         me.strategy = this
-        gameMap = game.gameMap
-        // At this point "game" variable is populated with initial map data.
-        // This is a good place to do computationally expensive start-up pre-processing.
-        // As soon as you call "ready" function below, the 2 second per turn timer will start.
-
-        def duration = ChronoUnit.MILLIS.between(start, LocalTime.now())
-        Log.log("Init duration: $duration")
+        Log.log("Running with flags: ${FeatureFlags.getFlags()}")
         return game
     }
 
@@ -73,7 +66,6 @@ class ComplexPlayerStrategy implements PlayerStrategy {
         Log.log("Successfully created bot! My Player ID is " + game.myId)
     }
 
-    // TODO: Not Tested
     void assignAttackShips() {
         if (game.turnNumber > Constants.MAX_TURNS * Configurables.TURNS_UNTIL_ATTACK_SHIPYARDS) {
             Flux.fromIterable(game.players)
@@ -122,7 +114,7 @@ class ComplexPlayerStrategy implements PlayerStrategy {
          */
 
         List<Command> turnCommands = new ArrayList<>()
-        turnCommands.addAll(me.navigateShips())
+        turnCommands.addAll(navigateShips())
 
         if (shouldSpawnShip()) {
             Command spawnShipCommand = spawnShip()
@@ -132,6 +124,10 @@ class ComplexPlayerStrategy implements PlayerStrategy {
         engine.endTurn(turnCommands)
         def duration = ChronoUnit.MILLIS.between(start, LocalTime.now())
         Log.log("Turn duration: $duration")
+    }
+
+    List<MoveCommand> navigateShips() {
+        return me.navigateShips()
     }
 
     Command spawnShip() {
