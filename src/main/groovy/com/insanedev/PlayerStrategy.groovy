@@ -188,6 +188,19 @@ class ComplexPlayerStrategy implements PlayerStrategy {
                 .defaultIfEmpty(InfluenceVector.ZERO)
                 .block()
     }
+
+    List getNeeds() {
+        return Flux.fromIterable(areas).map({new ShipNeed(area: it)}).collectList().block()
+    }
+}
+
+@Canonical
+class ShipNeed {
+    Area area
+
+    Position getLocation() {
+        return area.center
+    }
 }
 
 @Canonical
