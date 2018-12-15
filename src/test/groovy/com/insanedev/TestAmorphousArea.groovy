@@ -52,10 +52,11 @@ class TestAmorphousArea extends BaseTestFakeGameEngine {
         def center = new Position(5, 5)
         game.gameMap[center].halite = 1000
         when:
-        def areas = AmorphousArea.generate(center, 500, game)
+        strategy.analyzeMap()
+        def areas = strategy.areas
 
         then:
-        def cells = areas.getPositions().collectList().block()
+        def cells = areas[0].getPositions().collectList().block()
         cells == [center]
     }
 
@@ -63,10 +64,11 @@ class TestAmorphousArea extends BaseTestFakeGameEngine {
         def positions = [new Position(5, 5), new Position(5, 6)]
         positions.stream().forEach({ game.gameMap[it].halite = 1000 })
         when:
-        def areas = AmorphousArea.generate(positions[0], 500, game)
+        strategy.analyzeMap()
+        def areas = strategy.areas
 
         then:
-        def cells = areas.getPositions().collectList().block()
+        def cells = areas[0].getPositions().collectList().block()
         Flux.fromIterable(positions).subscribe({assert cells.contains(it)})
     }
 
@@ -74,10 +76,11 @@ class TestAmorphousArea extends BaseTestFakeGameEngine {
         def positions = [new Position(5, 5), new Position(6,5)]
         positions.stream().forEach({ game.gameMap[it].halite = 1000 })
         when:
-        def areas = AmorphousArea.generate(positions[0], 500, game)
+        strategy.analyzeMap()
+        def areas = strategy.areas
 
         then:
-        def cells = areas.getPositions().collectList().block()
+        def cells = areas[0].getPositions().collectList().block()
         Flux.fromIterable(positions).subscribe({assert cells.contains(it)})
     }
 
@@ -85,10 +88,11 @@ class TestAmorphousArea extends BaseTestFakeGameEngine {
         def positions = [new Position(5, 5), new Position(4,5)]
         positions.stream().forEach({ game.gameMap[it].halite = 1000 })
         when:
-        def areas = AmorphousArea.generate(positions[0], 500, game)
+        strategy.analyzeMap()
+        def areas = strategy.areas
 
         then:
-        def cells = areas.getPositions().collectList().block()
+        def cells = areas[0].getPositions().collectList().block()
         Flux.fromIterable(positions).subscribe({assert cells.contains(it)})
     }
 
@@ -96,10 +100,11 @@ class TestAmorphousArea extends BaseTestFakeGameEngine {
         def positions = [new Position(5, 5), new Position(5,4)]
         positions.stream().forEach({ game.gameMap[it].halite = 1000 })
         when:
-        def areas = AmorphousArea.generate(positions[0], 500, game)
+        strategy.analyzeMap()
+        def areas = strategy.areas
 
         then:
-        def cells = areas.getPositions().collectList().block()
+        def cells = areas[0].getPositions().collectList().block()
         Flux.fromIterable(positions).subscribe({assert cells.contains(it)})
     }
 
@@ -107,10 +112,11 @@ class TestAmorphousArea extends BaseTestFakeGameEngine {
         def positions = createLineOfYPositions(5, 3, 5)
         positions.stream().forEach({ game.gameMap[it].halite = 1000 })
         when:
-        def areas = AmorphousArea.generate(positions[0], 500, game)
+        strategy.analyzeMap()
+        def areas = strategy.areas
 
         then:
-        def cells = areas.getPositions().collectList().block()
+        def cells = areas[0].getPositions().collectList().block()
         Flux.fromIterable(positions).subscribe({assert cells.contains(it)})
     }
 
@@ -118,10 +124,11 @@ class TestAmorphousArea extends BaseTestFakeGameEngine {
         def positions = createLineOfYPositions(5, 4, 5)
         positions.stream().forEach({ game.gameMap[it].halite = 1000 })
         when:
-        def areas = AmorphousArea.generate(positions[0], 500, game)
+        strategy.analyzeMap()
+        def areas = strategy.areas
 
         then:
-        def cells = areas.getPositions().collectList().block()
+        def cells = areas[0].getPositions().collectList().block()
         Flux.fromIterable(positions).subscribe({assert cells.contains(it)})
     }
 
@@ -129,22 +136,25 @@ class TestAmorphousArea extends BaseTestFakeGameEngine {
         def positions = [new Position(5,5), new Position(5,6), new Position(6,5), new Position(6,6)]
         positions.stream().forEach({ game.gameMap[it].halite = 1000 })
         when:
-        def areas = AmorphousArea.generate(positions[0], 500, game)
+        strategy.analyzeMap()
+        def areas = strategy.areas
 
         then:
-        def cells = areas.getPositions().collectList().block()
+        def cells = areas[0].getPositions().collectList().block()
         Flux.fromIterable(positions).subscribe({assert cells.contains(it)})
     }
 
     def "Generator creates an area of [(5,5),(5,6)] when [(6,5),(6,6)] are below the min halite"() {
         def positions = [new Position(5,5), new Position(5,6), new Position(6,5), new Position(6,6)]
-        int startingHalite = 508
-        positions.stream().forEach({ game.gameMap[it].halite = startingHalite -= 5 })
+        int startingHalite = 1000
+        // Dependent on Configurables.AREA_MINIMUM_SCALE
+        positions.stream().forEach({ game.gameMap[it].halite = startingHalite -= 249 })
         when:
-        def areas = AmorphousArea.generate(positions[0], 500, game)
+        strategy.analyzeMap()
+        def areas = strategy.areas
 
         then:
-        def cells = areas.getPositions().collectList().block()
+        def cells = areas[0].getPositions().collectList().block()
         Flux.fromIterable(positions[2..3]).subscribe({assert !cells.contains(it)})
     }
 
@@ -153,10 +163,11 @@ class TestAmorphousArea extends BaseTestFakeGameEngine {
         positions.stream().forEach({ game.gameMap[it].halite = 1000 })
         def firstArea = new AmorphousArea([game.gameMap[positions[3]]], game)
         when:
-        def areas = AmorphousArea.generate(positions[0], 500, game)
+        strategy.analyzeMap()
+        def areas = strategy.areas
 
         then:
-        def cells = areas.getPositions().collectList().block()
+        def cells = areas[0].getPositions().collectList().block()
         assert !cells.contains(positions[3])
     }
 
